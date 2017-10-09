@@ -12,6 +12,8 @@ After building the app it will run on port 8000. (but this will be flexible in t
 
 ## API calls
 
+Postman [collection](https://www.getpostman.com/collections/ca46387e102621040d2c) of the call's.
+
 ### Transactions
 
 [POST] `http://localhost:8000/transaction`
