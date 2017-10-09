@@ -43,7 +43,8 @@ func hash(b Block) string {
 
 	// Data for binary.Write must be a fixed-size value or a slice of fixed-size values,
 	// or a pointer to such data.
-	// Marshalling the struct to json is a workaround... But it works
+	// @todo Marshalling the struct to json is a workaround... But it works
+	// @todo might be able to fix it with a char(length) instead of string?
 	jsonblock, errr := json.Marshal(b)
 	if errr != nil {
 		fmt.Printf("Error: %s", errr)

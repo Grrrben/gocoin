@@ -46,7 +46,7 @@ func (a *App) Run() {
 
 func (a *App) initializeRoutes() {
 	a.Router.HandleFunc("/", a.index).Methods("GET")
-	a.Router.HandleFunc("/transaction/new", a.newTransaction).Methods("POST")
+	a.Router.HandleFunc("/transaction", a.newTransaction).Methods("POST")
 	a.Router.HandleFunc("/mine", a.mine).Methods("GET")
 	a.Router.HandleFunc("/chain", a.chain).Methods("GET")
 	a.Router.HandleFunc("/validate", a.validate).Methods("GET")
