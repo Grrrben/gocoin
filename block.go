@@ -8,7 +8,6 @@ type Block struct {
 	PreviousHash string
 }
 
-
 // Block = {
 // 	'Index': 1,
 // 	'Timestamp': 1506057125.900785,

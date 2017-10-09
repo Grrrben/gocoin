@@ -1,12 +1,12 @@
 package main
 
 import (
-	"time"
-	"fmt"
 	"bytes"
-	"encoding/binary"
 	"crypto/sha256"
+	"encoding/binary"
 	"encoding/json"
+	"fmt"
+	"time"
 )
 
 // how many 0's do we want to check
@@ -61,18 +61,18 @@ func hash(b Block) string {
 
 // lastBlock returns the last Block in the Chain
 func (bc *Blockchain) lastBlock() Block {
-	return bc.Chain[len(bc.Chain) -1]
+	return bc.Chain[len(bc.Chain)-1]
 }
 
 func (bc *Blockchain) proofOfWork(lastProof int64) int64 {
 	// Simple Proof of Work Algorithm:
 	// - Find a number p' such that hash(lp') contains leading 4 zeroes, where
-    // - l is the previous Proof, and p' is the new Proof
+	// - l is the previous Proof, and p' is the new Proof
 	var proof int64 = 0
-	i := 0;
+	i := 0
 	for !bc.validProof(lastProof, proof) {
 		proof += 1
-		i++;
+		i++
 	}
 	fmt.Printf("Proof found in %d cycles (difficulty %d)\n", i, hashDifficulty)
 	return proof
@@ -153,7 +153,7 @@ func (bc *Blockchain) validate() bool {
 		//if block['previous_hash'] != self.hash(last_block):
 		//return False
 
-		previous := bc.Chain[i - 1]
+		previous := bc.Chain[i-1]
 		current := bc.Chain[i]
 
 		if current.PreviousHash != hash(previous) {
@@ -174,7 +174,6 @@ func (bc *Blockchain) validate() bool {
 			return false
 		}
 	}
-
 
 	return true
 

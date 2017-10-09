@@ -7,8 +7,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/gorilla/mux"
 	"github.com/BurntSushi/toml"
+	"github.com/gorilla/mux"
 	"os"
 )
 
@@ -18,7 +18,7 @@ type Server struct {
 }
 
 type Config struct {
-	Server   Server
+	Server Server
 }
 
 var config Config
@@ -38,10 +38,10 @@ func (a *App) Initialize() {
 }
 
 func (a *App) Run() {
-	port := fmt.Sprintf("%d", config.Server.Port);
+	port := fmt.Sprintf("%d", config.Server.Port)
 	fmt.Println("Starting server")
 	fmt.Printf("Running on port %s\n", port)
-	log.Fatal(http.ListenAndServe(":" + port, a.Router))
+	log.Fatal(http.ListenAndServe(":"+port, a.Router))
 }
 
 func (a *App) initializeRoutes() {
@@ -73,7 +73,7 @@ func (a *App) newTransaction(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) chain(w http.ResponseWriter, r *http.Request) {
-	resp := map[string]interface{}{"chain": bc.Chain,"transactions": bc.Transactions, "length": len(bc.Chain)}
+	resp := map[string]interface{}{"chain": bc.Chain, "transactions": bc.Transactions, "length": len(bc.Chain)}
 	respondWithJSON(w, http.StatusOK, resp)
 }
 
@@ -117,11 +117,10 @@ func (a *App) mine(w http.ResponseWriter, r *http.Request) {
 	bc.newTransaction(tr)
 	block := bc.newBlock(proof, "")
 
-
 	resp := map[string]interface{}{
-		"message": "New block mined.",
-		"Block": block,
-		"length": len(bc.Chain),
+		"message":      "New block mined.",
+		"Block":        block,
+		"length":       len(bc.Chain),
 		"transactions": len(block.Transactions),
 	}
 	respondWithJSON(w, http.StatusOK, resp)
