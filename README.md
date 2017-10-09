@@ -29,12 +29,79 @@ Add a new transaction
 
 [GET] `http://localhost:8000/mine`   
 Mine the next block.  
+Response e.g.  
+
+```
+{
+    "Block": {
+        "Index": 3,
+        "Timestamp": 1507534014669759993,
+        "Transactions": [
+            {
+                "Sender": "my address",
+                "Recipient": "someone else's address",
+                "Amount": 5
+            },
+            {
+                "Sender": "0",
+                "Recipient": "recipient",
+                "Amount": 1
+            }
+        ],
+        "Proof": 27562,
+        "PreviousHash": "484dbea2061eb70559cba363897d6c6e63383b233e00fca9a403165a31d5689b"
+    },
+    "length": 3,
+    "message": "New block mined.",
+    "transactions": 2
+}
+```
 
 [GET] `http://localhost:8000/validate`  
 Validate the chain.  
+```
+{
+   "length": 3,
+   "valid": true
+}
+```
 
 [GET] `http://localhost:8000/chain`  
-Fetch the entire chain.
+Fetch the entire chain.  
+
+```
+{
+    "chain": [
+        {
+            "Index": 1,
+            "Timestamp": 1507533982542409663,
+            "Transactions": [],
+            "Proof": 100,
+            "PreviousHash": "_"
+        },
+        {
+            "Index": 2,
+            "Timestamp": 1507533994836490217,
+            "Transactions": [
+                {
+                    "Sender": "my address",
+                    "Recipient": "someone else's address",
+                    "Amount": 5
+                },
+                {
+                    "Sender": "0",
+                    "Recipient": "recipient",
+                    "Amount": 1
+                }
+            ],
+            "Proof": 52838,
+            "PreviousHash": "c3b09e9d4930e8af16eb0892d8629572f694741bf046b596cf05c8ca1553799b"
+        }
+    ],
+    "length": 2,
+    "transactions": null
+}
+```
 
 ### Network
 
