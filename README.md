@@ -109,7 +109,7 @@ Fetch the entire chain.
 
 _Entire section is a TODO_
 
-[GET] `http://localhost:8000/miners` Get a list of miners
+[GET] `http://localhost:8000/miners` Get a list of miners  
 [POST] `http://localhost:8000/miners` Add a miner to the network
 
 ```
@@ -119,3 +119,11 @@ _Entire section is a TODO_
  "description": "Hello World"
 }
 ```
+
+## TODO
+
++ add multiple servers
++ distribute blockchain
++ standarise transactions
++ GET transaction call, based on hash id
++ validate transactions

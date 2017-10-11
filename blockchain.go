@@ -39,7 +39,9 @@ func (bc *Blockchain) newTransaction(tr Transaction) int64 {
 
 // hash Creates a SHA-256 hash of a Block
 func hash(b Block) string {
-	fmt.Printf("hashing block %d\n", b.Index)
+	if debug {
+		fmt.Printf("hashing block %d\n", b.Index)
+	}
 
 	// Data for binary.Write must be a fixed-size value or a slice of fixed-size values,
 	// or a pointer to such data.
@@ -47,14 +49,18 @@ func hash(b Block) string {
 	// @todo might be able to fix it with a char(length) instead of string?
 	jsonblock, errr := json.Marshal(b)
 	if errr != nil {
-		fmt.Printf("Error: %s", errr)
+		if debug {
+			fmt.Printf("Error: %s", errr)
+		}
 	}
 
 	var buf bytes.Buffer
 	err := binary.Write(&buf, binary.BigEndian, jsonblock)
 	if err != nil {
-		fmt.Println("Could not compute hash")
-		fmt.Println(err)
+		if debug {
+			fmt.Println("Could not compute hash")
+			fmt.Println(err)
+		}
 	}
 	return fmt.Sprintf("%x", sha256.Sum256(buf.Bytes())) // %x; base 16, with lower-case letters for a-f
 }
@@ -74,7 +80,9 @@ func (bc *Blockchain) proofOfWork(lastProof int64) int64 {
 		proof += 1
 		i++
 	}
-	fmt.Printf("Proof found in %d cycles (difficulty %d)\n", i, hashDifficulty)
+	if debug {
+		fmt.Printf("Proof found in %d cycles (difficulty %d)\n", i, hashDifficulty)
+	}
 	return proof
 
 }
@@ -87,6 +95,7 @@ func (bc *Blockchain) validProof(proof int64, lastProof int64) bool {
 	var i int8
 	hashString := ""
 	for i = 0; i < hashDifficulty; i++ {
+		// todo move this out of the loopt
 		hashString = hashString + "0"
 	}
 
@@ -127,12 +136,14 @@ func initBlockchain() *Blockchain {
 		Transactions: make([]Transaction, 0),
 		Nodes:        nil,
 	}
-	fmt.Printf("init Blockchain\n %v\n", newBlockchain)
-
+	if debug {
+		fmt.Printf("init Blockchain\n %v\n", newBlockchain)
+	}
 	// adding a first, Genesis, Block to the Chain
 	b := newBlockchain.newBlock(100, "_")
-	fmt.Printf("adding a Block:\n %v\n", b)
-	fmt.Printf("Blockchain:\n %v\n", newBlockchain)
+	if debug {
+		fmt.Printf("adding a Block:\n %v\n", b)
+	}
 	return newBlockchain // pointer
 }
 
@@ -141,10 +152,14 @@ func initBlockchain() *Blockchain {
 func (bc *Blockchain) validate() bool {
 
 	chainLength := len(bc.Chain)
-	fmt.Printf("Validating a chain with a chainLength of %d\n", chainLength)
+	if debug {
+		fmt.Printf("Validating a chain with a chainLength of %d\n", chainLength)
+	}
 
 	if chainLength == 1 {
-		fmt.Println("chain has only one block yet, thus  valid")
+		if debug {
+			fmt.Println("chain has only one block yet, thus  valid")
+		}
 		return true
 	}
 
@@ -157,9 +172,11 @@ func (bc *Blockchain) validate() bool {
 		current := bc.Chain[i]
 
 		if current.PreviousHash != hash(previous) {
-			fmt.Println("invalid hash")
-			fmt.Printf("Previous block: %d\n", previous.Index)
-			fmt.Printf("Current block: %d\n", current.Index)
+			if debug {
+				fmt.Println("invalid hash")
+				fmt.Printf("Previous block: %d\n", previous.Index)
+				fmt.Printf("Current block: %d\n", current.Index)
+			}
 			return false
 		}
 
@@ -168,9 +185,11 @@ func (bc *Blockchain) validate() bool {
 		//return False
 
 		if !bc.validProof(previous.Proof, current.Proof) {
-			fmt.Println("invalid proof")
-			fmt.Printf("Previous block: %d\n", previous.Index)
-			fmt.Printf("Current block: %d\n", current.Index)
+			if debug {
+				fmt.Println("invalid proof")
+				fmt.Printf("Previous block: %d\n", previous.Index)
+				fmt.Printf("Current block: %d\n", current.Index)
+			}
 			return false
 		}
 	}
