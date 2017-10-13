@@ -32,10 +32,8 @@ func (a *App) Initialize() {
 	config = GetConfig()
 	bc = initBlockchain()
 
-	if debug {
-		fmt.Println("Starting with a base blockchain:")
-		fmt.Printf("Blockchain:\n %v\n", bc)
-	}
+	messenger("Starting with a base blockchain:")
+	messenger("Blockchain:\n %v\n", bc)
 	a.Router = mux.NewRouter()
 	a.initializeRoutes()
 }
