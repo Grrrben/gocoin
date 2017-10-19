@@ -9,7 +9,9 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/gorilla/mux"
+	"net"
 	"os"
+	"strconv"
 )
 
 type Server struct {
@@ -28,33 +30,104 @@ type App struct {
 	DB     *sql.DB
 }
 
-func (a *App) Initialize() {
+func (a *App) Initialize(port uint16) {
 	config = GetConfig()
 	bc = initBlockchain()
 
 	messenger("Starting with a base blockchain:")
 	messenger("Blockchain:\n %v\n", bc)
+
+	// add the Client to the stack
+	cls = initClients() // a pointer to the Clients struct
+	cl := Client{
+		Ip:   "127.0.0.1",
+		Port: port,
+		Name: "client1",
+		Hash: createClientHash("127.0.0.1", port, "client1"),
+	}
+
+	me = cl
+	// register me as the first client
+	cls.addClient(cl)
+	// fetch a list of existing Clients
+	cls.syncClients()
+	// register me at all other Clients
+	cls.greetClients()
+
 	a.Router = mux.NewRouter()
 	a.initializeRoutes()
 }
 
-func (a *App) Run() {
-	port := fmt.Sprintf("%d", config.Server.Port)
+func (a *App) Run(port uint16) {
+	p := fmt.Sprintf("%d", port)
 	fmt.Println("Starting server")
-	fmt.Printf("Running on port %s\n", port)
-	log.Fatal(http.ListenAndServe(":"+port, a.Router))
+	fmt.Printf("Running on Port %s\n", p)
+	log.Fatal(http.ListenAndServe(":"+p, a.Router))
 }
 
 func (a *App) initializeRoutes() {
 	a.Router.HandleFunc("/", a.index).Methods("GET")
+	// transactions
 	a.Router.HandleFunc("/transaction", a.newTransaction).Methods("POST")
+	// blocks
+	a.Router.HandleFunc("/block", a.connectClient).Methods("POST")
+	// mining and chaining
 	a.Router.HandleFunc("/mine", a.mine).Methods("GET")
 	a.Router.HandleFunc("/chain", a.chain).Methods("GET")
 	a.Router.HandleFunc("/validate", a.validate).Methods("GET")
+	// Clients
+	a.Router.HandleFunc("/client", a.connectClient).Methods("POST")
+	a.Router.HandleFunc("/client", a.getClients).Methods("GET")
 }
 
 func (a *App) index(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, "Hello world")
+}
+
+// connectClient Connect a Client to the network which is represented
+// in the Clients.list
+func (a *App) connectClient(w http.ResponseWriter, r *http.Request) {
+
+	// "[::1]:33998"
+	ip, p, ipErr := net.SplitHostPort(r.RemoteAddr)
+	u, uerr := strconv.ParseUint(p, 10, 16)
+	if uerr != nil {
+		messenger("Could not parse port to int: %s", p)
+	}
+
+	port := uint16(u)
+
+	if ipErr != nil {
+		messenger("Could not get IP/Port: %s", r.RemoteAddr)
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	var postdata ClientPost // todo kan ik niet deels een Client vullen?
+	err := decoder.Decode(&postdata)
+	if err != nil {
+		messenger("Could not decode postdata")
+		respondWithError(w, http.StatusBadRequest, "invalid json")
+		panic(err)
+	}
+
+	cl := Client{
+		Ip:       ip,
+		Protocol: "https://", // todo
+		Port:     port,
+		Name:     postdata.Name,
+		Hash:     createClientHash(ip, port, postdata.Name),
+	}
+	// register the client
+	cls.addClient(cl)
+
+	resp := map[string]interface{}{"Client": cl, "total": cls.num()}
+	respondWithJSON(w, http.StatusOK, resp)
+}
+
+// getClients response is the list of Clients
+func (a *App) getClients(w http.ResponseWriter, r *http.Request) {
+	resp := map[string]interface{}{"clients": cls.List, "length": len(cls.List)}
+	respondWithJSON(w, http.StatusOK, resp)
 }
 
 func (a *App) newTransaction(w http.ResponseWriter, r *http.Request) {
