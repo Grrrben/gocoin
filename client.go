@@ -47,22 +47,27 @@ func initClients() *Clients {
 // A Client can only be added a single time, the list is unique.
 // return bool true on success.
 func (cls *Clients) addClient(cl Client) bool {
+	messenger("Adding Client:\n%v\n", cl)
 	for _, c := range cls.List {
 		if c.Hash == cl.Hash {
-			messenger("Client already exist in the network")
+			messenger("Client already exist in the network\n")
 			return false
 		}
 	}
 	cls.List = append(cls.List, cl)
-	messenger("Client added. Clients: %d", cls.num())
+	messenger("Client added. Clients: %d\n", cls.num())
 	return true
 }
 
 // syncClients contacts other Clients to fetch a full list of Clients
 // todo; how do I know which nodes are currently in the network
 func (cls *Clients) syncClients() bool {
+	// if I am the Mother node, ignore this
+	if me.Port == 8000 {
+		return true
+	}
 	// for now, just use a main parent node
-	url := "http://localhost:8000"
+	url := "http://localhost:8000/client"
 
 	var externalCls Clients
 
@@ -74,7 +79,7 @@ func (cls *Clients) syncClients() bool {
 	defer resp.Body.Close()
 	decodingErr := json.NewDecoder(resp.Body).Decode(&externalCls)
 	if decodingErr != nil {
-		messenger("Could not decode JSON of list of Clients")
+		messenger("Could not decode JSON of list of Clients\n")
 		return false
 	}
 
@@ -86,28 +91,34 @@ func (cls *Clients) syncClients() bool {
 			i++
 		}
 	}
-	messenger("%d external Client(s) added", i)
+	messenger("%d external Client(s) added\n", i)
 
 	return true
 }
 
 // greetClients contacts other Clients to add this client to their list of known Clients
 func (cls *Clients) greetClients() bool {
+	messenger("\nUs: %v\n", cls.List)
 	for _, cl := range cls.List {
 		if cl == me {
 			// no need to register myself
 			continue
 		}
 		// POST to /client
-		url := fmt.Sprintf("%s%s%s/client", cl.Protocol, cl.Ip, cl.Port)
-		messenger("client URL: %s", url)
+		url := fmt.Sprintf("%s%s:%d/client", cl.Protocol, cl.Ip, cl.Port)
+		messenger("client URL: %s\n", url)
 
 		payload, err := json.Marshal(me)
+		messenger("\nMe: %v\n", me)
 		if err != nil {
 			messenger("Could not marshall client: Me")
 		}
 
 		req, err := http.NewRequest("POST", url, bytes.NewBuffer(payload))
+		if err != nil {
+			messenger("Request setup error: %s", err)
+			panic(err)
+		}
 		req.Header.Set("Content-Type", "application/json")
 
 		client := &http.Client{}
@@ -116,8 +127,6 @@ func (cls *Clients) greetClients() bool {
 			messenger("POST request error: %s", err)
 			panic(err)
 		}
-
-		fmt.Printf("Resp %v", resp.Body)
 
 		defer resp.Body.Close()
 

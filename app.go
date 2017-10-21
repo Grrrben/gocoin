@@ -40,6 +40,7 @@ func (a *App) Initialize(port uint16) {
 	// add the Client to the stack
 	cls = initClients() // a pointer to the Clients struct
 	cl := Client{
+		Protocol: "http://",
 		Ip:   "127.0.0.1",
 		Port: port,
 		Name: "client1",
@@ -90,6 +91,7 @@ func (a *App) connectClient(w http.ResponseWriter, r *http.Request) {
 
 	// "[::1]:33998"
 	ip, p, ipErr := net.SplitHostPort(r.RemoteAddr)
+	messenger("Host %v\n", r.RemoteAddr)
 	u, uerr := strconv.ParseUint(p, 10, 16)
 	if uerr != nil {
 		messenger("Could not parse port to int: %s", p)
@@ -112,7 +114,7 @@ func (a *App) connectClient(w http.ResponseWriter, r *http.Request) {
 
 	cl := Client{
 		Ip:       ip,
-		Protocol: "https://", // todo
+		Protocol: "http://", // todo
 		Port:     port,
 		Name:     postdata.Name,
 		Hash:     createClientHash(ip, port, postdata.Name),
@@ -126,14 +128,16 @@ func (a *App) connectClient(w http.ResponseWriter, r *http.Request) {
 
 // getClients response is the list of Clients
 func (a *App) getClients(w http.ResponseWriter, r *http.Request) {
-	resp := map[string]interface{}{"clients": cls.List, "length": len(cls.List)}
+	resp := map[string]interface{}{"list": cls.List, "length": len(cls.List)}
 	respondWithJSON(w, http.StatusOK, resp)
 }
 
+// newTransaction adds a transaction, which consists of:
+// Sender string
+// Recipient string
+// Amount float64
 func (a *App) newTransaction(w http.ResponseWriter, r *http.Request) {
-	// Sender string
-	// Recipient string
-	// Amount float64
+
 	var tr Transaction
 
 	err := json.NewDecoder(r.Body).Decode(&tr)
@@ -146,11 +150,13 @@ func (a *App) newTransaction(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, "Transaction added")
 }
 
+// chain shows the entire blockchain
 func (a *App) chain(w http.ResponseWriter, r *http.Request) {
 	resp := map[string]interface{}{"chain": bc.Chain, "transactions": bc.Transactions, "length": len(bc.Chain)}
 	respondWithJSON(w, http.StatusOK, resp)
 }
 
+// validate checks the entire blockchain
 func (a *App) validate(w http.ResponseWriter, r *http.Request) {
 	isValid := bc.validate()
 	resp := map[string]interface{}{"valid": isValid, "length": len(bc.Chain)}
