@@ -15,7 +15,6 @@ const hashDifficulty int8 = 4
 type Blockchain struct {
 	Chain        []Block
 	Transactions []Transaction
-	Nodes        []string
 }
 
 type chainService interface {
@@ -37,7 +36,7 @@ func (bc *Blockchain) newTransaction(tr Transaction) int64 {
 	return bc.lastBlock().Index + 1
 }
 
-// hash Creates a SHA-256 hash of a Block
+// Hash Creates a SHA-256 hash of a Block
 func hash(b Block) string {
 	if debug {
 		fmt.Printf("hashing block %d\n", b.Index)
@@ -134,7 +133,6 @@ func initBlockchain() *Blockchain {
 	newBlockchain := &Blockchain{
 		Chain:        make([]Block, 0),
 		Transactions: make([]Transaction, 0),
-		Nodes:        nil,
 	}
 	if debug {
 		fmt.Printf("init Blockchain\n %v\n", newBlockchain)
@@ -164,26 +162,24 @@ func (bc *Blockchain) validate() bool {
 	}
 
 	for i := 1; i < chainLength; i++ {
-		//# Check that the hash of the block is correct
-		//if block['previous_hash'] != self.hash(last_block):
-		//return False
-
+		// Check that the hash of the block is correct
+		// if block['previous_hash'] != self.Hash(last_block):
+		// return False
 		previous := bc.Chain[i-1]
 		current := bc.Chain[i]
 
 		if current.PreviousHash != hash(previous) {
 			if debug {
-				fmt.Println("invalid hash")
+				fmt.Println("invalid Hash")
 				fmt.Printf("Previous block: %d\n", previous.Index)
 				fmt.Printf("Current block: %d\n", current.Index)
 			}
 			return false
 		}
 
-		//# Check that the Proof of Work is correct
-		//if not self.valid_proof(last_block['proof'], block['proof']):
-		//return False
-
+		// Check that the Proof of Work is correct
+		// if not self.valid_proof(last_block['proof'], block['proof']):
+		// return False
 		if !bc.validProof(previous.Proof, current.Proof) {
 			if debug {
 				fmt.Println("invalid proof")
@@ -193,27 +189,5 @@ func (bc *Blockchain) validate() bool {
 			return false
 		}
 	}
-
 	return true
-
-	//last_block = chain[0]
-	//current_index = 1
-	//
-	//while current_index < len(chain):
-	//block = chain[current_index]
-	//print(f'{last_block}')
-	//print(f'{block}')
-	//print("\n-----------\n")
-	//# Check that the hash of the block is correct
-	//if block['previous_hash'] != self.hash(last_block):
-	//return False
-	//
-	//# Check that the Proof of Work is correct
-	//if not self.valid_proof(last_block['proof'], block['proof']):
-	//return False
-	//
-	//last_block = block
-	//current_index += 1
-	//
-	//return True
 }

@@ -28,41 +28,93 @@ type App struct {
 	DB     *sql.DB
 }
 
-func (a *App) Initialize() {
+func (a *App) Initialize(port uint16) {
 	config = GetConfig()
 	bc = initBlockchain()
 
-	if debug {
-		fmt.Println("Starting with a base blockchain:")
-		fmt.Printf("Blockchain:\n %v\n", bc)
+	messenger("Starting with a base blockchain:")
+	messenger("Blockchain:\n %v\n", bc)
+
+	// add the Client to the stack
+	cls = initClients() // a pointer to the Clients struct
+	cl := Client{
+		Protocol: "http://",
+		Ip:       "127.0.0.1",
+		Port:     port,
+		Name:     "client1",
+		Hash:     createClientHash("127.0.0.1", port, "client1"),
 	}
+
+	me = cl
+	// register me as the first client
+	cls.addClient(cl)
+	// fetch a list of existing Clients
+	cls.syncClients()
+	// register me at all other Clients
+	cls.greetClients()
+
 	a.Router = mux.NewRouter()
 	a.initializeRoutes()
 }
 
-func (a *App) Run() {
-	port := fmt.Sprintf("%d", config.Server.Port)
+func (a *App) Run(port uint16) {
+	p := fmt.Sprintf("%d", port)
 	fmt.Println("Starting server")
-	fmt.Printf("Running on port %s\n", port)
-	log.Fatal(http.ListenAndServe(":"+port, a.Router))
+	fmt.Printf("Running on Port %s\n", p)
+	log.Fatal(http.ListenAndServe(":"+p, a.Router))
 }
 
 func (a *App) initializeRoutes() {
 	a.Router.HandleFunc("/", a.index).Methods("GET")
+	// transactions
 	a.Router.HandleFunc("/transaction", a.newTransaction).Methods("POST")
+	// blocks
+	a.Router.HandleFunc("/block", a.connectClient).Methods("POST")
+	// mining and chaining
 	a.Router.HandleFunc("/mine", a.mine).Methods("GET")
 	a.Router.HandleFunc("/chain", a.chain).Methods("GET")
 	a.Router.HandleFunc("/validate", a.validate).Methods("GET")
+	// Clients
+	a.Router.HandleFunc("/client", a.connectClient).Methods("POST")
+	a.Router.HandleFunc("/client", a.getClients).Methods("GET")
 }
 
 func (a *App) index(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, "Hello world")
 }
 
+// connectClient Connect a Client to the network which is represented
+// in the Clients.list The postdata should consist of a standard Client
+func (a *App) connectClient(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
+	var newCl Client
+	err := decoder.Decode(&newCl)
+	if err != nil {
+		messenger("Could not decode postdata of new client")
+		respondWithError(w, http.StatusBadRequest, "invalid json")
+		panic(err)
+	}
+
+	newCl.Hash = createClientHash(newCl.Ip, newCl.Port, newCl.Name)
+	// register the client
+	cls.addClient(newCl)
+
+	resp := map[string]interface{}{"Client": newCl, "total": cls.num()}
+	respondWithJSON(w, http.StatusOK, resp)
+}
+
+// getClients response is the list of Clients
+func (a *App) getClients(w http.ResponseWriter, r *http.Request) {
+	resp := map[string]interface{}{"list": cls.List, "length": len(cls.List)}
+	respondWithJSON(w, http.StatusOK, resp)
+}
+
+// newTransaction adds a transaction, which consists of:
+// Sender string
+// Recipient string
+// Amount float64
 func (a *App) newTransaction(w http.ResponseWriter, r *http.Request) {
-	// Sender string
-	// Recipient string
-	// Amount float64
+
 	var tr Transaction
 
 	err := json.NewDecoder(r.Body).Decode(&tr)
@@ -75,11 +127,13 @@ func (a *App) newTransaction(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, "Transaction added")
 }
 
+// chain shows the entire blockchain
 func (a *App) chain(w http.ResponseWriter, r *http.Request) {
 	resp := map[string]interface{}{"chain": bc.Chain, "transactions": bc.Transactions, "length": len(bc.Chain)}
 	respondWithJSON(w, http.StatusOK, resp)
 }
 
+// validate checks the entire blockchain
 func (a *App) validate(w http.ResponseWriter, r *http.Request) {
 	isValid := bc.validate()
 	resp := map[string]interface{}{"valid": isValid, "length": len(bc.Chain)}
