@@ -107,23 +107,45 @@ Fetch the entire chain.
 
 ### Network
 
-_Entire section is a TODO_
+[GET] `http://localhost:8000/client` Get a list of clients
 
-[GET] `http://localhost:8000/miners` Get a list of miners  
-[POST] `http://localhost:8000/miners` Add a miner to the network
+The response exists of a `length`, representing the total number oof clients, and a `list` of all clients.
 
 ```
 {
- "ip": "123.456.78.90",
- "name": "Hello",
- "description": "Hello World"
+    "length": 3,
+    "list": [
+        {
+            "Ip": "127.0.0.1",
+            "Protocol": "http://",
+            "Port": 8000,
+            "Name": "client1",
+            "Hash": "f1c13a0c8292fa5c9dfe565a19f79c2993619e9b6c5da0669b5c886043224673"
+        },
+        {
+            ...
+        }
+    ]
+}
+```
+
+[POST] `http://localhost:8000/client` Add a client to the network
+
+The POSTed data should be consistent with a Client.
+
+```
+{
+ "ip": "123.456.78.90", // string
+ "protocol": "http://", // string
+ "port": 8080, // int
+ "name": "This is me" // string
 }
 ```
 
 ## TODO
 
-+ add multiple servers
 + distribute blockchain
 + standarise transactions
 + GET transaction call, based on hash id
 + validate transactions
++ Remove the messenger for (debug) feedback, just build or `go get` another logger.
