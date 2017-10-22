@@ -37,7 +37,7 @@ func (bc *Blockchain) newTransaction(tr Transaction) int64 {
 	return bc.lastBlock().Index + 1
 }
 
-// Hash Creates a SHA-256 Hash of a Block
+// Hash Creates a SHA-256 hash of a Block
 func hash(b Block) string {
 	if debug {
 		fmt.Printf("hashing block %d\n", b.Index)
@@ -58,7 +58,7 @@ func hash(b Block) string {
 	err := binary.Write(&buf, binary.BigEndian, jsonblock)
 	if err != nil {
 		if debug {
-			fmt.Println("Could not compute Hash")
+			fmt.Println("Could not compute hash")
 			fmt.Println(err)
 		}
 	}
@@ -72,7 +72,7 @@ func (bc *Blockchain) lastBlock() Block {
 
 func (bc *Blockchain) proofOfWork(lastProof int64) int64 {
 	// Simple Proof of Work Algorithm:
-	// - Find a number p' such that Hash(lp') contains leading 4 zeroes, where
+	// - Find a number p' such that hash(lp') contains leading 4 zeroes, where
 	// - l is the previous Proof, and p' is the new Proof
 	var proof int64 = 0
 	i := 0
@@ -87,7 +87,7 @@ func (bc *Blockchain) proofOfWork(lastProof int64) int64 {
 
 }
 
-// validProof is called until it finds an acceptable Hash and returns true
+// validProof is called until it finds an acceptable hash and returns true
 func (bc *Blockchain) validProof(proof int64, lastProof int64) bool {
 	guess := fmt.Sprintf("%d%d", lastProof, proof)
 	guessHash := fmt.Sprintf("%x", sha256.Sum256([]byte(guess)))
@@ -164,10 +164,9 @@ func (bc *Blockchain) validate() bool {
 	}
 
 	for i := 1; i < chainLength; i++ {
-		//# Check that the Hash of the block is correct
-		//if block['previous_hash'] != self.Hash(last_block):
-		//return False
-
+		// Check that the hash of the block is correct
+		// if block['previous_hash'] != self.Hash(last_block):
+		// return False
 		previous := bc.Chain[i-1]
 		current := bc.Chain[i]
 
@@ -180,10 +179,9 @@ func (bc *Blockchain) validate() bool {
 			return false
 		}
 
-		//# Check that the Proof of Work is correct
-		//if not self.valid_proof(last_block['proof'], block['proof']):
-		//return False
-
+		// Check that the Proof of Work is correct
+		// if not self.valid_proof(last_block['proof'], block['proof']):
+		// return False
 		if !bc.validProof(previous.Proof, current.Proof) {
 			if debug {
 				fmt.Println("invalid proof")
@@ -193,27 +191,5 @@ func (bc *Blockchain) validate() bool {
 			return false
 		}
 	}
-
 	return true
-
-	//last_block = chain[0]
-	//current_index = 1
-	//
-	//while current_index < len(chain):
-	//block = chain[current_index]
-	//print(f'{last_block}')
-	//print(f'{block}')
-	//print("\n-----------\n")
-	//# Check that the Hash of the block is correct
-	//if block['previous_hash'] != self.Hash(last_block):
-	//return False
-	//
-	//# Check that the Proof of Work is correct
-	//if not self.valid_proof(last_block['proof'], block['proof']):
-	//return False
-	//
-	//last_block = block
-	//current_index += 1
-	//
-	//return True
 }

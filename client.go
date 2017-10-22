@@ -84,7 +84,6 @@ func (cls *Clients) syncClients() bool {
 		}
 	}
 	messenger("%d external Client(s) added\n", i)
-
 	return true
 }
 
@@ -120,9 +119,7 @@ func (cls *Clients) greetClients() bool {
 			// I dont want to panic here, but it could be a good idea to
 			// remove the client from the list
 		}
-
 		defer resp.Body.Close()
-
 	}
 	return true
 }
