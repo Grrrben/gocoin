@@ -6,9 +6,17 @@ A blockchain/bitcoin implementation written in Go.
 
 go version go1.9beta2
 
-After building the app it will run on port 8000. (but this will be flexible in the future).
+After building the app it will run on port 8000 unless a -p flag is set.
 
 [localhost:8000](http://localhost:8000)
+
+## Flags
+
+`-p` Port number on which the client will run.
+Usage: `-p=8001`
+
+`--verbose` Verbose will let the app show debug messages in the terminal.
+Usage: `--verbose=1`
 
 ## API calls
 
