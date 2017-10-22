@@ -74,6 +74,7 @@ func (a *App) initializeRoutes() {
 	a.Router.HandleFunc("/mine", a.mine).Methods("GET")
 	a.Router.HandleFunc("/chain", a.chain).Methods("GET")
 	a.Router.HandleFunc("/validate", a.validate).Methods("GET")
+	a.Router.HandleFunc("/resolve", a.resolve).Methods("GET")
 	// Clients
 	a.Router.HandleFunc("/client", a.connectClient).Methods("POST")
 	a.Router.HandleFunc("/client", a.getClients).Methods("GET")
@@ -81,6 +82,11 @@ func (a *App) initializeRoutes() {
 
 func (a *App) index(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, "Hello world")
+}
+
+func (a *App) resolve(w http.ResponseWriter, r *http.Request) {
+	resolved := bc.resolve()
+	respondWithJSON(w, http.StatusOK, resolved)
 }
 
 // connectClient Connect a Client to the network which is represented

@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
+	"net/http"
+	"io/ioutil"
 )
 
 // how many 0's do we want to check
@@ -17,6 +19,13 @@ type Blockchain struct {
 	Transactions []Transaction
 }
 
+// chain is used for fetching and analysing external blockchains.
+type ChainData struct {
+	ExtChain     []Block
+	length       int
+	transactions []Transaction // todo needed?
+}
+
 type chainService interface {
 	newBlock() bool
 	newTransaction() bool
@@ -25,6 +34,7 @@ type chainService interface {
 	proofOfWork(lastProof int64) int64
 	validProof(proof int64, lastProof int64) bool
 	validate() bool
+	resolve() bool
 }
 
 // newTransaction will create a Transaction to go into the next Block to be mined.
@@ -190,4 +200,80 @@ func (bc *Blockchain) validate() bool {
 		}
 	}
 	return true
+}
+
+// resolve is the Consensus Algorithm, it resolves conflicts
+// by replacing our chain with the longest one in the network.
+// Returns bool. True if our chain was replaced, false if not
+func (bc *Blockchain) resolve () bool {
+
+	//neighbours = self.nodes
+	//new_chain = None
+	//
+	//# We're only looking for chains longer than ours
+	//max_length = len(self.chain)
+	//
+	//# Grab and verify the chains from all the nodes in our network
+	//for node in neighbours:
+	//response = requests.get(f'http://{node}/chain')
+	//
+	//if response.status_code == 200:
+	//length = response.json()['length']
+	//chain = response.json()['chain']
+	//
+	//# Check if the length is longer and the chain is valid
+	//if length > max_length and self.valid_chain(chain):
+	//max_length = length
+	//new_chain = chain
+	//
+	//# Replace our chain if we discovered a new, valid chain longer than ours
+	//if new_chain:
+	//self.chain = new_chain
+	//return True
+	//
+	//return False
+
+	length := len(bc.Chain)
+
+	messenger("resolving conflicts\n")
+
+	messenger("%d\n", length)
+	for _, cl := range cls.List {
+		url := fmt.Sprintf("%s%s:%d/chain", cl.Protocol, cl.Ip, cl.Port)
+		messenger("%s\n", url)
+
+		resp, err := http.Get(url)
+		if err != nil {
+			messenger("Chain request error: %s", err)
+			// I don't want to panic here, but it could be a good idea to
+			// remove the client from the list
+		}
+
+		var extChain ChainData
+		decodingErr := json.NewDecoder(resp.Body).Decode(&extChain)
+		defer resp.Body.Close()
+		messenger("Chain:\n%v\n", extChain)
+		messenger("Body:\n%v\n", resp.Body)
+		messenger("Status:\n%v\n", resp.StatusCode)
+		messenger("%d\n", len(extChain.ExtChain))
+
+		body, err := ioutil.ReadAll(resp.Body)
+		fmt.Printf(">>>Body: %v\n", body)
+		fmt.Printf(">>>Error: %v\n", err)
+
+		if decodingErr != nil {
+			messenger("Could not decode JSON of external blockchain\n")
+			return false
+		}
+
+		if len(extChain.ExtChain) > length {
+			messenger("Found a new blockchain with length %n.\n", len(extChain.ExtChain))
+			messenger("Our blockchain had a length of %n.\n", length)
+
+			bc.Chain = extChain.ExtChain
+			return true
+		}
+	}
+
+	return false
 }
