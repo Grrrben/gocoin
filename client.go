@@ -13,18 +13,12 @@ import (
 var me Client
 
 // @todo Clients via IP
-
 type Client struct {
 	Ip       string
 	Protocol string
 	Port     uint16
 	Name     string
 	Hash     string // todo should be the wallet Hash?
-}
-
-// used to fetch the post data from the Client
-type ClientPost struct {
-	Name string
 }
 
 type Clients struct {
@@ -47,10 +41,8 @@ func initClients() *Clients {
 // A Client can only be added a single time, the list is unique.
 // return bool true on success.
 func (cls *Clients) addClient(cl Client) bool {
-	messenger("Adding Client:\n%v\n", cl)
 	for _, c := range cls.List {
 		if c.Hash == cl.Hash {
-			messenger("Client already exist in the network\n")
 			return false
 		}
 	}
@@ -125,7 +117,8 @@ func (cls *Clients) greetClients() bool {
 		resp, err := client.Do(req)
 		if err != nil {
 			messenger("POST request error: %s", err)
-			panic(err)
+			// I dont want to panic here, but it could be a good idea to
+			// remove the client from the list
 		}
 
 		defer resp.Body.Close()
@@ -138,6 +131,8 @@ func (cls *Clients) num() int {
 	return len(cls.List)
 }
 
+// createClientHash
+// todo; Should be wallet?
 func createClientHash(ip string, port uint16, name string) string {
 	id := fmt.Sprint("%s-%d-%s", ip, port, name)
 

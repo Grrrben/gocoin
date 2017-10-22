@@ -9,9 +9,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/gorilla/mux"
-	"net"
 	"os"
-	"strconv"
 )
 
 type Server struct {
@@ -41,10 +39,10 @@ func (a *App) Initialize(port uint16) {
 	cls = initClients() // a pointer to the Clients struct
 	cl := Client{
 		Protocol: "http://",
-		Ip:   "127.0.0.1",
-		Port: port,
-		Name: "client1",
-		Hash: createClientHash("127.0.0.1", port, "client1"),
+		Ip:       "127.0.0.1",
+		Port:     port,
+		Name:     "client1",
+		Hash:     createClientHash("127.0.0.1", port, "client1"),
 	}
 
 	me = cl
@@ -86,43 +84,22 @@ func (a *App) index(w http.ResponseWriter, r *http.Request) {
 }
 
 // connectClient Connect a Client to the network which is represented
-// in the Clients.list
+// in the Clients.list The postdata should consist of a standard Client
 func (a *App) connectClient(w http.ResponseWriter, r *http.Request) {
-
-	// "[::1]:33998"
-	ip, p, ipErr := net.SplitHostPort(r.RemoteAddr)
-	messenger("Host %v\n", r.RemoteAddr)
-	u, uerr := strconv.ParseUint(p, 10, 16)
-	if uerr != nil {
-		messenger("Could not parse port to int: %s", p)
-	}
-
-	port := uint16(u)
-
-	if ipErr != nil {
-		messenger("Could not get IP/Port: %s", r.RemoteAddr)
-	}
-
 	decoder := json.NewDecoder(r.Body)
-	var postdata ClientPost // todo kan ik niet deels een Client vullen?
-	err := decoder.Decode(&postdata)
+	var newCl Client
+	err := decoder.Decode(&newCl)
 	if err != nil {
-		messenger("Could not decode postdata")
+		messenger("Could not decode postdata of new client")
 		respondWithError(w, http.StatusBadRequest, "invalid json")
 		panic(err)
 	}
 
-	cl := Client{
-		Ip:       ip,
-		Protocol: "http://", // todo
-		Port:     port,
-		Name:     postdata.Name,
-		Hash:     createClientHash(ip, port, postdata.Name),
-	}
+	newCl.Hash = createClientHash(newCl.Ip, newCl.Port, newCl.Name)
 	// register the client
-	cls.addClient(cl)
+	cls.addClient(newCl)
 
-	resp := map[string]interface{}{"Client": cl, "total": cls.num()}
+	resp := map[string]interface{}{"Client": newCl, "total": cls.num()}
 	respondWithJSON(w, http.StatusOK, resp)
 }
 
