@@ -15,7 +15,6 @@ const hashDifficulty int8 = 4
 type Blockchain struct {
 	Chain        []Block
 	Transactions []Transaction
-	Nodes        []string
 }
 
 type chainService interface {
@@ -134,7 +133,6 @@ func initBlockchain() *Blockchain {
 	newBlockchain := &Blockchain{
 		Chain:        make([]Block, 0),
 		Transactions: make([]Transaction, 0),
-		Nodes:        nil,
 	}
 	if debug {
 		fmt.Printf("init Blockchain\n %v\n", newBlockchain)
