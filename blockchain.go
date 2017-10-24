@@ -6,8 +6,8 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"time"
 	"net/http"
+	"time"
 )
 
 // how many 0's do we want to check
@@ -197,12 +197,13 @@ func (bc *Blockchain) validate() bool {
 // resolve is the Consensus Algorithm, it resolves conflicts
 // by replacing our chain with the longest one in the network.
 // Returns bool. True if our chain was replaced, false if not
-func (bc *Blockchain) resolve () bool {
-	messenger("Resolving conflicts:")
+func (bc *Blockchain) resolve() bool {
+	messenger("Resolving conflicts (clients %d):", len(cls.List))
 	length := len(bc.Chain)
+	replaced := false
 	for _, cl := range cls.List {
 		if cl == me {
-			continue;
+			continue
 		}
 		url := fmt.Sprintf("%s%s:%d/chain", cl.Protocol, cl.Ip, cl.Port)
 		messenger("%s\n", url)
@@ -228,13 +229,13 @@ func (bc *Blockchain) resolve () bool {
 		if len(extChain.Chain) > length {
 			messenger("Found a new blockchain with length %d.\n", len(extChain.Chain))
 			messenger("Our blockchain had a length of %d.\n", length)
+			messenger("Blockchain replaced.")
 
 			// it might be better to fetch a list of all client's chain length first, then replace ours
 			// with the largest one.
 			bc.Chain = extChain.Chain
-			return true
+			replaced = true
 		}
 	}
-
-	return false
+	return replaced
 }
