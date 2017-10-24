@@ -113,6 +113,12 @@ Fetch the entire chain.
 }
 ```
 
+[GET] `http://localhost:8000/resolve`
+
+Resolve conflicts in the chain.
+The client checks the list of other nodes in the network and replaces it's blockchain if a larger one is found.
+Responses with true if the chain is replaced, otherwise false.
+
 ### Network
 
 [GET] `http://localhost:8000/client` Get a list of clients

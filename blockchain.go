@@ -229,6 +229,8 @@ func (bc *Blockchain) resolve () bool {
 			messenger("Found a new blockchain with length %d.\n", len(extChain.Chain))
 			messenger("Our blockchain had a length of %d.\n", length)
 
+			// it might be better to fetch a list of all client's chain length first, then replace ours
+			// with the largest one.
 			bc.Chain = extChain.Chain
 			return true
 		}
