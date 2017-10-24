@@ -4,7 +4,7 @@ import "fmt"
 
 func messenger(message string, vars ...interface{}) {
 	// todo; this works but it should differentiate between debug, warning, error
-	// todo; add logging.
+	// todo; add logging via an external import
 	if debug {
 		if len(vars) > 0 {
 			fmt.Printf(message, vars...)

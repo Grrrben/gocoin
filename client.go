@@ -68,12 +68,15 @@ func (cls *Clients) syncClients() bool {
 		messenger("Could not get list of Clients on url: %s", url)
 		return false
 	}
+	messenger("Client body:\n%v\n", resp.Body)
 	defer resp.Body.Close()
 	decodingErr := json.NewDecoder(resp.Body).Decode(&externalCls)
 	if decodingErr != nil {
 		messenger("Could not decode JSON of list of Clients\n")
 		return false
 	}
+
+	messenger("externalCls:\n%v\n", externalCls)
 
 	// just try to add all clients
 	i := 0
@@ -89,7 +92,6 @@ func (cls *Clients) syncClients() bool {
 
 // greetClients contacts other Clients to add this client to their list of known Clients
 func (cls *Clients) greetClients() bool {
-	messenger("\nUs: %v\n", cls.List)
 	for _, cl := range cls.List {
 		if cl == me {
 			// no need to register myself

@@ -6,9 +6,17 @@ A blockchain/bitcoin implementation written in Go.
 
 go version go1.9beta2
 
-After building the app it will run on port 8000. (but this will be flexible in the future).
+After building the app it will run on port 8000 unless a -p flag is set.
 
 [localhost:8000](http://localhost:8000)
+
+## Flags
+
+`-p` Port number on which the client will run.
+Usage: `-p=8001`
+
+`--verbose` Verbose will let the app show debug messages in the terminal.
+Usage: `--verbose=1`
 
 ## API calls
 
@@ -105,25 +113,53 @@ Fetch the entire chain.
 }
 ```
 
+[GET] `http://localhost:8000/resolve`
+
+Resolve conflicts in the chain.
+The client checks the list of other nodes in the network and replaces it's blockchain if a larger one is found.
+Responses with true if the chain is replaced, otherwise false.
+
 ### Network
 
-_Entire section is a TODO_
+[GET] `http://localhost:8000/client` Get a list of clients
 
-[GET] `http://localhost:8000/miners` Get a list of miners  
-[POST] `http://localhost:8000/miners` Add a miner to the network
+The response exists of a `length`, representing the total number oof clients, and a `list` of all clients.
 
 ```
 {
- "ip": "123.456.78.90",
- "name": "Hello",
- "description": "Hello World"
+    "length": 3,
+    "list": [
+        {
+            "Ip": "127.0.0.1",
+            "Protocol": "http://",
+            "Port": 8000,
+            "Name": "client1",
+            "Hash": "f1c13a0c8292fa5c9dfe565a19f79c2993619e9b6c5da0669b5c886043224673"
+        },
+        {
+            ...
+        }
+    ]
+}
+```
+
+[POST] `http://localhost:8000/client` Add a client to the network
+
+The POSTed data should be consistent with a Client.
+
+```
+{
+ "ip": "123.456.78.90", // string
+ "protocol": "http://", // string
+ "port": 8080, // int
+ "name": "This is me" // string
 }
 ```
 
 ## TODO
 
-+ add multiple servers
 + distribute blockchain
 + standarise transactions
 + GET transaction call, based on hash id
 + validate transactions
++ Remove the messenger for (debug) feedback, just build or `go get` another logger.
