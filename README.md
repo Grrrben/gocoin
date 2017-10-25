@@ -158,7 +158,6 @@ The POSTed data should be consistent with a Client.
 
 ## TODO
 
-+ distribute blockchain
 + standarise transactions
 + GET transaction call, based on hash id
 + validate transactions
