@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"github.com/grrrben/glog"
+	"github.com/grrrben/golog"
 )
 
 // this is me, a client
@@ -48,7 +48,7 @@ func (cls *Clients) addClient(cl Client) bool {
 		}
 	}
 	cls.List = append(cls.List, cl)
-	glog.Infof("Client added. Clients: %d\n", cls.num())
+	golog.Infof("Client added. Clients: %d\n", cls.num())
 	return true
 }
 
@@ -66,19 +66,19 @@ func (cls *Clients) syncClients() bool {
 
 	resp, err := http.Get(url)
 	if err != nil {
-		glog.Warningf("Could not get list of Clients on url: %s", url)
+		golog.Warningf("Could not get list of Clients on url: %s", url)
 		return false
 	}
-	glog.Infof("Client body:\n%v\n", resp.Body)
+	golog.Infof("Client body:\n%v\n", resp.Body)
 	defer resp.Body.Close()
 	decodingErr := json.NewDecoder(resp.Body).Decode(&externalCls)
 	if decodingErr != nil {
-		glog.Warningf("Could not decode JSON of list of Clients\n")
-		glog.Warningf("Could not decode JSON of list of Clients\n")
+		golog.Warningf("Could not decode JSON of list of Clients\n")
+		golog.Warningf("Could not decode JSON of list of Clients\n")
 		return false
 	}
 
-	glog.Infof("externalCls:\n%v\n", externalCls)
+	golog.Infof("externalCls:\n%v\n", externalCls)
 
 	// just try to add all clients
 	i := 0
@@ -88,7 +88,7 @@ func (cls *Clients) syncClients() bool {
 			i++
 		}
 	}
-	glog.Infof("%d external Client(s) added\n", i)
+	golog.Infof("%d external Client(s) added\n", i)
 	return true
 }
 
@@ -101,17 +101,17 @@ func (cls *Clients) greetClients() bool {
 		}
 		// POST to /client
 		url := fmt.Sprintf("%s%s:%d/client", cl.Protocol, cl.Ip, cl.Port)
-		glog.Infof("client URL: %s\n", url)
+		golog.Infof("client URL: %s\n", url)
 
 		payload, err := json.Marshal(me)
-		glog.Infof("\nMe: %v\n", me)
+		golog.Infof("\nMe: %v\n", me)
 		if err != nil {
-			glog.Warning("Could not marshall client: Me")
+			golog.Warning("Could not marshall client: Me")
 		}
 
 		req, err := http.NewRequest("POST", url, bytes.NewBuffer(payload))
 		if err != nil {
-			glog.Warningf("Request setup error: %s", err)
+			golog.Warningf("Request setup error: %s", err)
 			panic(err)
 		}
 		req.Header.Set("Content-Type", "application/json")
@@ -119,7 +119,7 @@ func (cls *Clients) greetClients() bool {
 		client := &http.Client{}
 		resp, err := client.Do(req)
 		if err != nil {
-			glog.Warningf("POST request error: %s", err)
+			golog.Warningf("POST request error: %s", err)
 			// I dont want to panic here, but it could be a good idea to
 			// remove the client from the list
 		}

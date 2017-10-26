@@ -10,7 +10,7 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/gorilla/mux"
 	"os"
-	"github.com/grrrben/glog"
+	"github.com/grrrben/golog"
 )
 
 type Server struct {
@@ -33,8 +33,8 @@ func (a *App) Initialize(port uint16) {
 	config = GetConfig()
 	bc = initBlockchain()
 
-	glog.Info("Starting with a base blockchain:")
-	glog.Infof("Blockchain:\n %v\n", bc)
+	golog.Info("Starting with a base blockchain:")
+	golog.Infof("Blockchain:\n %v\n", bc)
 
 	// add the Client to the stack
 	cls = initClients() // a pointer to the Clients struct
@@ -97,7 +97,7 @@ func (a *App) connectClient(w http.ResponseWriter, r *http.Request) {
 	var newCl Client
 	err := decoder.Decode(&newCl)
 	if err != nil {
-		glog.Warning("Could not decode postdata of new client")
+		golog.Warning("Could not decode postdata of new client")
 		respondWithError(w, http.StatusBadRequest, "invalid json")
 		panic(err)
 	}

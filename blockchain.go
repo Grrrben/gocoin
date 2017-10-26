@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"time"
-	"github.com/grrrben/glog"
+	"github.com/grrrben/golog"
 )
 
 // how many 0's do we want to check
@@ -199,7 +199,7 @@ func (bc *Blockchain) validate() bool {
 // by replacing our chain with the longest one in the network.
 // Returns bool. True if our chain was replaced, false if not
 func (bc *Blockchain) resolve() bool {
-	glog.Infof("Resolving conflicts (clients %d):", len(cls.List))
+	golog.Infof("Resolving conflicts (clients %d):", len(cls.List))
 	length := len(bc.Chain)
 	replaced := false
 	for _, cl := range cls.List {
@@ -207,11 +207,11 @@ func (bc *Blockchain) resolve() bool {
 			continue
 		}
 		url := fmt.Sprintf("%s%s:%d/chain", cl.Protocol, cl.Ip, cl.Port)
-		glog.Infof("%s\n", url)
+		golog.Infof("%s\n", url)
 
 		resp, err := http.Get(url)
 		if err != nil {
-			glog.Warningf("Chain request error: %s", err)
+			golog.Warningf("Chain request error: %s", err)
 			// I don't want to panic here, but it could be a good idea to
 			// remove the client from the list
 			continue
@@ -222,15 +222,15 @@ func (bc *Blockchain) resolve() bool {
 		defer resp.Body.Close()
 
 		if decodingErr != nil {
-			glog.Warningf("Could not decode JSON of external blockchain\n")
-			glog.Warningf("Error: %s\n", err)
+			golog.Warningf("Could not decode JSON of external blockchain\n")
+			golog.Warningf("Error: %s\n", err)
 			continue
 		}
 
 		if len(extChain.Chain) > length {
-			glog.Infof("Found a new blockchain with length %d.\n", len(extChain.Chain))
-			glog.Infof("Our blockchain had a length of %d.\n", length)
-			glog.Infof("Blockchain replaced.")
+			golog.Infof("Found a new blockchain with length %d.\n", len(extChain.Chain))
+			golog.Infof("Our blockchain had a length of %d.\n", length)
+			golog.Infof("Blockchain replaced.")
 
 			// it might be better to fetch a list of all client's chain length first, then replace ours
 			// with the largest one.
