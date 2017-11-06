@@ -198,7 +198,6 @@ func (bc *Blockchain) validate() bool {
 // Returns bool. True if our chain was replaced, false if not
 func (bc *Blockchain) resolve() bool {
 	golog.Infof("Resolving conflicts (clients %d):", len(cls.List))
-	length := len(bc.Chain)
 	replaced := false
 	for _, cl := range cls.List {
 		if cl == me {
@@ -225,9 +224,9 @@ func (bc *Blockchain) resolve() bool {
 			continue
 		}
 
-		if len(extChain.Chain) > length {
+		if len(extChain.Chain) > len(bc.Chain) {
 			golog.Infof("Found a new blockchain with length %d.\n", len(extChain.Chain))
-			golog.Infof("Our blockchain had a length of %d.\n", length)
+			golog.Infof("Our blockchain had a length of %d.\n", len(bc.Chain))
 			golog.Infof("Blockchain replaced.")
 
 			// it might be better to fetch a list of all client's chain length first, then replace ours
