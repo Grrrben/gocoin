@@ -74,7 +74,6 @@ func (cls *Clients) syncClients() bool {
 	decodingErr := json.NewDecoder(resp.Body).Decode(&externalCls)
 	if decodingErr != nil {
 		golog.Warningf("Could not decode JSON of list of Clients\n")
-		golog.Warningf("Could not decode JSON of list of Clients\n")
 		return false
 	}
 
@@ -99,35 +98,41 @@ func (cls *Clients) greetClients() bool {
 			// no need to register myself
 			continue
 		}
-		// POST to /client
-		url := fmt.Sprintf("%s%s:%d/client", cl.Protocol, cl.Ip, cl.Port)
-		golog.Infof("client URL: %s\n", url)
-
-		payload, err := json.Marshal(me)
-		golog.Infof("\nMe: %v\n", me)
-		if err != nil {
-			golog.Warning("Could not marshall client: Me")
-		}
-
-		req, err := http.NewRequest("POST", url, bytes.NewBuffer(payload))
-		if err != nil {
-			golog.Warningf("Request setup error: %s", err)
-			panic(err)
-		}
-		req.Header.Set("Content-Type", "application/json")
-
-		client := &http.Client{}
-		resp, err := client.Do(req)
-		if err != nil {
-			golog.Warningf("POST request error: %s", err)
-			// I dont want to panic here, but it could be a good idea to
-			// remove the client from the list
-		}
-		defer resp.Body.Close()
+		go greet(cl)
 	}
 	return true
 }
 
+// greet makes a call to a client cl to make this node known within the network.
+func greet (cl Client) {
+	// POST to /client
+	url := fmt.Sprintf("%s%s:%d/client", cl.Protocol, cl.Ip, cl.Port)
+	golog.Infof("client URL: %s\n", url)
+
+	payload, err := json.Marshal(me)
+	golog.Infof("Me: %v\n", me)
+	if err != nil {
+		golog.Warning("Could not marshall client: Me")
+	}
+
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payload))
+	if err != nil {
+		golog.Warningf("Request setup error: %s", err)
+		panic(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		golog.Warningf("POST request error: %s", err)
+		// I don't want to panic here, but it could be a good idea to
+		// remove the client from the list
+	}
+	defer resp.Body.Close()
+}
+
+// num returns an int which represents the number of connected clients.
 func (cls *Clients) num() int {
 	return len(cls.List)
 }
