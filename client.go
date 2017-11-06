@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"github.com/grrrben/golog"
 	"net/http"
 )
 
@@ -47,7 +48,7 @@ func (cls *Clients) addClient(cl Client) bool {
 		}
 	}
 	cls.List = append(cls.List, cl)
-	messenger("Client added. Clients: %d\n", cls.num())
+	golog.Infof("Client added. Clients: %d\n", cls.num())
 	return true
 }
 
@@ -65,18 +66,19 @@ func (cls *Clients) syncClients() bool {
 
 	resp, err := http.Get(url)
 	if err != nil {
-		messenger("Could not get list of Clients on url: %s", url)
+		golog.Warningf("Could not get list of Clients on url: %s", url)
 		return false
 	}
-	messenger("Client body:\n%v\n", resp.Body)
+	golog.Infof("Client body:\n%v\n", resp.Body)
 	defer resp.Body.Close()
 	decodingErr := json.NewDecoder(resp.Body).Decode(&externalCls)
 	if decodingErr != nil {
-		messenger("Could not decode JSON of list of Clients\n")
+		golog.Warningf("Could not decode JSON of list of Clients\n")
+		golog.Warningf("Could not decode JSON of list of Clients\n")
 		return false
 	}
 
-	messenger("externalCls:\n%v\n", externalCls)
+	golog.Infof("externalCls:\n%v\n", externalCls)
 
 	// just try to add all clients
 	i := 0
@@ -86,7 +88,7 @@ func (cls *Clients) syncClients() bool {
 			i++
 		}
 	}
-	messenger("%d external Client(s) added\n", i)
+	golog.Infof("%d external Client(s) added\n", i)
 	return true
 }
 
@@ -99,17 +101,17 @@ func (cls *Clients) greetClients() bool {
 		}
 		// POST to /client
 		url := fmt.Sprintf("%s%s:%d/client", cl.Protocol, cl.Ip, cl.Port)
-		messenger("client URL: %s\n", url)
+		golog.Infof("client URL: %s\n", url)
 
 		payload, err := json.Marshal(me)
-		messenger("\nMe: %v\n", me)
+		golog.Infof("\nMe: %v\n", me)
 		if err != nil {
-			messenger("Could not marshall client: Me")
+			golog.Warning("Could not marshall client: Me")
 		}
 
 		req, err := http.NewRequest("POST", url, bytes.NewBuffer(payload))
 		if err != nil {
-			messenger("Request setup error: %s", err)
+			golog.Warningf("Request setup error: %s", err)
 			panic(err)
 		}
 		req.Header.Set("Content-Type", "application/json")
@@ -117,7 +119,7 @@ func (cls *Clients) greetClients() bool {
 		client := &http.Client{}
 		resp, err := client.Do(req)
 		if err != nil {
-			messenger("POST request error: %s", err)
+			golog.Warningf("POST request error: %s", err)
 			// I dont want to panic here, but it could be a good idea to
 			// remove the client from the list
 		}
@@ -138,7 +140,7 @@ func createClientHash(ip string, port uint16, name string) string {
 	jsonId, errr := json.Marshal(id)
 	if errr != nil {
 		if debug {
-			fmt.Printf("Error: %s", errr)
+			golog.Errorf("Error: %s", errr)
 		}
 	}
 
@@ -146,8 +148,7 @@ func createClientHash(ip string, port uint16, name string) string {
 	err := binary.Write(&buf, binary.BigEndian, jsonId)
 	if err != nil {
 		if debug {
-			fmt.Println("Could not compute Client Hash")
-			fmt.Println(err)
+			golog.Errorf("Could not compute Client Hash. Msg: %s", err)
 		}
 	}
 	return fmt.Sprintf("%x", sha256.Sum256(buf.Bytes())) // %x; base 16, with lower-case letters for a-f

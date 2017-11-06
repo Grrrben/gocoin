@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"fmt"
+	"github.com/grrrben/golog"
 	"time"
 )
 
@@ -18,7 +19,7 @@ func createWallet() wallet {
 	err := binary.Write(&buf, binary.BigEndian, time.Now().Unix())
 	if err != nil {
 		if debug {
-			fmt.Println(err)
+			golog.Infof("Could not createWallet. Msg: %s", err)
 		}
 	}
 

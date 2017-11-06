@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"fmt"
+	"github.com/grrrben/golog"
 	"strconv"
 )
 
@@ -19,10 +19,14 @@ func main() {
 		debug = true
 	}
 
+	golog.SetLogDir("/home/grrrben/go/src/blockchain/log")
+	golog.Info("golog info line")
+	golog.Warning("golog warning line")
+	golog.Flush()
+
 	u, err := strconv.ParseUint(*prt, 10, 16) // always gives an uint64...
 	if err != nil {
-		fmt.Println("Unable to cast Prt to uint")
-		fmt.Println(err)
+		golog.Errorf("Unable to cast Prt to uint: %s", err)
 	}
 	// different Clients can have different ports,
 	// used to connect multiple Clients in debug.

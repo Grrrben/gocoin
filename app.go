@@ -9,6 +9,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/gorilla/mux"
+	"github.com/grrrben/golog"
 	"os"
 )
 
@@ -32,8 +33,8 @@ func (a *App) Initialize(port uint16) {
 	config = GetConfig()
 	bc = initBlockchain()
 
-	messenger("Starting with a base blockchain:")
-	messenger("Blockchain:\n %v\n", bc)
+	golog.Info("Starting with a base blockchain:")
+	golog.Infof("Blockchain:\n %v\n", bc)
 
 	// add the Client to the stack
 	cls = initClients() // a pointer to the Clients struct
@@ -96,7 +97,7 @@ func (a *App) connectClient(w http.ResponseWriter, r *http.Request) {
 	var newCl Client
 	err := decoder.Decode(&newCl)
 	if err != nil {
-		messenger("Could not decode postdata of new client")
+		golog.Warning("Could not decode postdata of new client")
 		respondWithError(w, http.StatusBadRequest, "invalid json")
 		panic(err)
 	}

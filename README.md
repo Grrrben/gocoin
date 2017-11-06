@@ -158,8 +158,6 @@ The POSTed data should be consistent with a Client.
 
 ## TODO
 
-+ distribute blockchain
-+ standarise transactions
++ Standarise transactions
 + GET transaction call, based on hash id
-+ validate transactions
-+ Remove the messenger for (debug) feedback, just build or `go get` another logger.
++ Validate transactions
