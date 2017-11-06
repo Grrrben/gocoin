@@ -9,8 +9,8 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/gorilla/mux"
-	"os"
 	"github.com/grrrben/golog"
+	"os"
 )
 
 type Server struct {

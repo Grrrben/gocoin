@@ -6,9 +6,9 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"github.com/grrrben/golog"
 	"net/http"
 	"time"
-	"github.com/grrrben/golog"
 )
 
 // how many 0's do we want to check

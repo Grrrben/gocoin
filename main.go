@@ -2,8 +2,8 @@ package main
 
 import (
 	"flag"
-	"strconv"
 	"github.com/grrrben/golog"
+	"strconv"
 )
 
 var bc *Blockchain

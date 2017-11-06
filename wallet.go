@@ -5,8 +5,8 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"fmt"
-	"time"
 	"github.com/grrrben/golog"
+	"time"
 )
 
 type wallet struct {

@@ -6,8 +6,8 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"github.com/grrrben/golog"
+	"net/http"
 )
 
 // this is me, a client
