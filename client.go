@@ -140,7 +140,7 @@ func createClientHash(ip string, port uint16, name string) string {
 	jsonId, errr := json.Marshal(id)
 	if errr != nil {
 		if debug {
-			fmt.Printf("Error: %s", errr)
+			golog.Errorf("Error: %s", errr)
 		}
 	}
 
@@ -148,8 +148,7 @@ func createClientHash(ip string, port uint16, name string) string {
 	err := binary.Write(&buf, binary.BigEndian, jsonId)
 	if err != nil {
 		if debug {
-			fmt.Println("Could not compute Client Hash")
-			fmt.Println(err)
+			golog.Errorf("Could not compute Client Hash. Msg: %s", err)
 		}
 	}
 	return fmt.Sprintf("%x", sha256.Sum256(buf.Bytes())) // %x; base 16, with lower-case letters for a-f
