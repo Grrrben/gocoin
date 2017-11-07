@@ -70,7 +70,7 @@ func (a *App) initializeRoutes() {
 	// transactions
 	a.Router.HandleFunc("/transaction", a.newTransaction).Methods("POST")
 	// blocks
-	a.Router.HandleFunc("/block", a.connectClient).Methods("POST")
+	a.Router.HandleFunc("/block", a.lastblock).Methods("GET")
 	// mining and chaining
 	a.Router.HandleFunc("/mine", a.mine).Methods("GET")
 	a.Router.HandleFunc("/chain", a.chain).Methods("GET")
@@ -90,6 +90,13 @@ func (a *App) index(w http.ResponseWriter, r *http.Request) {
 func (a *App) resolve(w http.ResponseWriter, r *http.Request) {
 	resolved := bc.resolve()
 	respondWithJSON(w, http.StatusOK, resolved)
+}
+
+// lastblock Serves single block
+func (a *App) lastblock(w http.ResponseWriter, r *http.Request) {
+	block := bc.Chain[len(bc.Chain) - 1]
+	resp := map[string]interface{}{"success": true,"block": block}
+	respondWithJSON(w, http.StatusOK, resp)
 }
 
 // chainStatus
