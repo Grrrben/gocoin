@@ -104,14 +104,20 @@ func (a *App) lastblock(w http.ResponseWriter, r *http.Request) {
 func (a *App) block(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	hash := vars["hash"]
+	found := false
 
 	for _, bl := range bc.Chain {
 		if bl.PreviousHash == hash {
+			found = true
 			resp := map[string]interface{}{"success": true,"block": bl}
 			respondWithJSON(w, http.StatusOK, resp)
 		}
+		break
 	}
-	respondWithError(w, http.StatusBadRequest, "Could not find block by hash")
+
+	if found == false {
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Could not find block by hash %s", hash))
+	}
 }
 
 // chainStatus
@@ -176,6 +182,8 @@ func (a *App) validate(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, resp)
 }
 
+// mine Mines a block and puts all transactions in the block
+// An incentive is paid to the miner and the list of transactions is cleared
 func (a *App) mine(w http.ResponseWriter, r *http.Request) {
 	lastBlock := bc.lastBlock()
 	lastProof := lastBlock.Proof

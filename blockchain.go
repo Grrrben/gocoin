@@ -127,6 +127,14 @@ func (bc *Blockchain) newBlock(proof int64, previousHash string) Block {
 	return block
 }
 
+// announceMinedBlock tells all clients in the network about the newly mined block.
+// it gives the new block to the clients who can add it to their chain.
+func announceMinedBlock (bl Block) {
+	// todo
+	// for clients, POST block
+	// Other clients should check the validity of the new block on their chain and add it.
+}
+
 // initBlockchain initialises the blockchain
 // Returns a pointer to the blockchain object that the app can alter later on
 func initBlockchain() *Blockchain {
