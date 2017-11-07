@@ -71,6 +71,7 @@ func (a *App) initializeRoutes() {
 	a.Router.HandleFunc("/transaction", a.newTransaction).Methods("POST")
 	// blocks
 	a.Router.HandleFunc("/block", a.lastblock).Methods("GET")
+	a.Router.HandleFunc("/block/{hash}", a.block).Methods("GET")
 	// mining and chaining
 	a.Router.HandleFunc("/mine", a.mine).Methods("GET")
 	a.Router.HandleFunc("/chain", a.chain).Methods("GET")
@@ -97,6 +98,20 @@ func (a *App) lastblock(w http.ResponseWriter, r *http.Request) {
 	block := bc.Chain[len(bc.Chain) - 1]
 	resp := map[string]interface{}{"success": true,"block": block}
 	respondWithJSON(w, http.StatusOK, resp)
+}
+
+// block Serves single block identified by it's hash
+func (a *App) block(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	hash := vars["hash"]
+
+	for _, bl := range bc.Chain {
+		if bl.PreviousHash == hash {
+			resp := map[string]interface{}{"success": true,"block": bl}
+			respondWithJSON(w, http.StatusOK, resp)
+		}
+	}
+	respondWithError(w, http.StatusBadRequest, "Could not find block by hash")
 }
 
 // chainStatus
