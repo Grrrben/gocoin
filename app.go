@@ -76,6 +76,7 @@ func (a *App) initializeRoutes() {
 	a.Router.HandleFunc("/chain", a.chain).Methods("GET")
 	a.Router.HandleFunc("/validate", a.validate).Methods("GET")
 	a.Router.HandleFunc("/resolve", a.resolve).Methods("GET")
+	a.Router.HandleFunc("/status", a.chainStatus).Methods("GET")
 	// Clients
 	a.Router.HandleFunc("/client", a.connectClient).Methods("POST")
 	a.Router.HandleFunc("/client", a.getClients).Methods("GET")
@@ -85,9 +86,17 @@ func (a *App) index(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, "Hello world")
 }
 
+// resolve Resolving conflict between chains in the network
 func (a *App) resolve(w http.ResponseWriter, r *http.Request) {
 	resolved := bc.resolve()
 	respondWithJSON(w, http.StatusOK, resolved)
+}
+
+// chainStatus
+func (a *App) chainStatus (w http.ResponseWriter, r *http.Request) {
+	hash := bc.Chain[len(bc.Chain) - 1].PreviousHash
+	resp := map[string]interface{}{"length": len(bc.Chain), "hash": hash}
+	respondWithJSON(w, http.StatusOK, resp)
 }
 
 // connectClient Connect a Client to the network which is represented
@@ -121,9 +130,7 @@ func (a *App) getClients(w http.ResponseWriter, r *http.Request) {
 // Recipient string
 // Amount float64
 func (a *App) newTransaction(w http.ResponseWriter, r *http.Request) {
-
 	var tr Transaction
-
 	err := json.NewDecoder(r.Body).Decode(&tr)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid Transaction")
