@@ -35,6 +35,52 @@ Add a new transaction
 }
 ```
 
+### Blocks
+
+[GET] `http://localhost:8000/block`  
+Fetches the last block  
+
+Response e.g.  
+
+```
+{
+    "block": {
+        "Index": 3,
+        "Timestamp": 1507534014669759993,
+        "Transactions": [
+            {
+                "Sender": "my address",
+                "Recipient": "someone else's address",
+                "Amount": 5
+            },
+            {
+                "Sender": "0",
+                "Recipient": "recipient",
+                "Amount": 1
+            }
+        ],
+        "Proof": 27562,
+        "PreviousHash": "484dbea2061eb70559cba363897d6c6e63383b233e00fca9a403165a31d5689b"
+    },
+    "success": true
+}
+```
+
+[GET] `http://localhost:8000/block/{hash}`  
+Fetches block with matching (string) hash  
+Response identical to `/block`.  
+ 
+[GET] `http://localhost:8000/block/index/{index}`  
+Fetches block with matching (int) index  
+Response identical to `/block`.  
+
+[POST] `http://localhost:8000/mined`  
+A receiver for blocks mined by other clients.  
+Should contain a (Block) block and a (string) sender. The method is called automatically by other clients when they mined a block.  
+
+Gives a 200 on success or a 409 if a conflict arrises.  
+
+
 ### Chain
 
 [GET] `http://localhost:8000/mine`   

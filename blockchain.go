@@ -177,7 +177,7 @@ func (bc *Blockchain) analyseInvalidBlock(bl Block, sender string) bool {
 
 			success := bc.addBlock(nextBlock)
 			if success == false {
-				golog.Warningf("Could not add block %d from $s", lastBlock.Index + i, sender)
+				golog.Warningf("Could not add block %d from %s", lastBlock.Index + i, sender)
 				golog.Info("----------------------------------")
 				return false
 			}
