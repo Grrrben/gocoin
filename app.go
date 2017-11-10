@@ -123,7 +123,7 @@ func (a *App) minedBlock(w http.ResponseWriter, r *http.Request) {
 		repair := bc.analyseInvalidBlock(payload.NewBlock, payload.Sender)
 
 		if (repair == false) {
-			// better resolve...
+			// better resolve..?
 			respondWithError(w, http.StatusConflict, "Invalid block")
 		} else {
 			resp := map[string]interface{}{
@@ -132,8 +132,6 @@ func (a *App) minedBlock(w http.ResponseWriter, r *http.Request) {
 			}
 			respondWithJSON(w, http.StatusOK, resp)
 		}
-
-
 	}
 }
 
@@ -241,7 +239,6 @@ func (a *App) newTransaction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	bc.newTransaction(tr)
-
 	respondWithJSON(w, http.StatusOK, "Transaction added")
 }
 
