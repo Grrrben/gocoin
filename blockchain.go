@@ -13,6 +13,7 @@ import (
 
 // how many zero's do we want in the hash
 const hashDifficulty int8 = 4
+
 // This should be the hash ending in the proof of work
 const hashEndsWith string = "0000"
 
@@ -128,12 +129,12 @@ func (bc *Blockchain) newBlock(proof int64, previousHash string) Block {
 // Return bool
 func (bc *Blockchain) addBlock(bl Block) bool {
 
-	lastBlock := bc.Chain[len(bc.Chain) - 1]
+	lastBlock := bc.Chain[len(bc.Chain)-1]
 
 	if bc.validProof(lastBlock.Proof, bl.Proof) {
 		golog.Info("Added a new block due to an announcement.")
 		bc.Chain = append(bc.Chain, bl)
-		return  true
+		return true
 	}
 	golog.Warning("Could not add the newly announced block.")
 	return false
@@ -144,7 +145,7 @@ func (bc *Blockchain) addBlock(bl Block) bool {
 // and tries to add more blocks if we are missing multiple.
 func (bc *Blockchain) analyseInvalidBlock(bl Block, sender string) bool {
 
-	lastBlock := bc.Chain[len(bc.Chain) - 1]
+	lastBlock := bc.Chain[len(bc.Chain)-1]
 
 	golog.Info("----------------------------------")
 	golog.Infof("Analysing block: index: %d", bl.Index)
@@ -158,8 +159,8 @@ func (bc *Blockchain) analyseInvalidBlock(bl Block, sender string) bool {
 			i++
 			var nextBlock Block
 
-			url := fmt.Sprintf("%s/block/index/%d", sender, lastBlock.Index + i)
-			golog.Infof("Fetching block %d from $s", lastBlock.Index + i, sender)
+			url := fmt.Sprintf("%s/block/index/%d", sender, lastBlock.Index+i)
+			golog.Infof("Fetching block %d from $s", lastBlock.Index+i, sender)
 
 			resp, err := http.Get(url)
 			if err != nil {
@@ -177,7 +178,7 @@ func (bc *Blockchain) analyseInvalidBlock(bl Block, sender string) bool {
 
 			success := bc.addBlock(nextBlock)
 			if success == false {
-				golog.Warningf("Could not add block %d from %s", lastBlock.Index + i, sender)
+				golog.Warningf("Could not add block %d from %s", lastBlock.Index+i, sender)
 				golog.Info("----------------------------------")
 				return false
 			}
@@ -198,6 +199,7 @@ func (bc *Blockchain) analyseInvalidBlock(bl Block, sender string) bool {
 	golog.Info("----------------------------------")
 	return true
 }
+
 // initBlockchain initialises the blockchain
 // Returns a pointer to the blockchain object that the app can alter later on
 func initBlockchain() *Blockchain {

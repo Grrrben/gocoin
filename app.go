@@ -99,8 +99,8 @@ func (a *App) minedBlock(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 
 	type Payload struct {
-		NewBlock Block `json:"block"`
-		Sender string `json:"sender"`
+		NewBlock Block  `json:"block"`
+		Sender   string `json:"sender"`
 	}
 
 	var payload Payload
@@ -114,21 +114,21 @@ func (a *App) minedBlock(w http.ResponseWriter, r *http.Request) {
 
 	if success {
 		resp := map[string]interface{}{
-			"success":      true,
-			"message":      "New block added",
+			"success": true,
+			"message": "New block added",
 		}
 		respondWithJSON(w, http.StatusOK, resp)
 	} else {
 		// todo analyse
 		repair := bc.analyseInvalidBlock(payload.NewBlock, payload.Sender)
 
-		if (repair == false) {
+		if repair == false {
 			// better resolve..?
 			respondWithError(w, http.StatusConflict, "Invalid block")
 		} else {
 			resp := map[string]interface{}{
-				"success":      true,
-				"message":      "New blocks added",
+				"success": true,
+				"message": "New blocks added",
 			}
 			respondWithJSON(w, http.StatusOK, resp)
 		}
@@ -143,8 +143,8 @@ func (a *App) resolve(w http.ResponseWriter, r *http.Request) {
 
 // lastblock Serves single block
 func (a *App) lastblock(w http.ResponseWriter, r *http.Request) {
-	block := bc.Chain[len(bc.Chain) - 1]
-	resp := map[string]interface{}{"success": true,"block": block}
+	block := bc.Chain[len(bc.Chain)-1]
+	resp := map[string]interface{}{"success": true, "block": block}
 	respondWithJSON(w, http.StatusOK, resp)
 }
 
@@ -157,7 +157,7 @@ func (a *App) block(w http.ResponseWriter, r *http.Request) {
 	for _, bl := range bc.Chain {
 		if bl.PreviousHash == hash {
 			found = true
-			resp := map[string]interface{}{"success": true,"block": bl}
+			resp := map[string]interface{}{"success": true, "block": bl}
 			respondWithJSON(w, http.StatusOK, resp)
 		}
 		break
@@ -183,7 +183,7 @@ func (a *App) blockByIndex(w http.ResponseWriter, r *http.Request) {
 	for _, bl := range bc.Chain {
 		if bl.Index == index {
 			found = true
-			resp := map[string]interface{}{"success": true,"block": bl}
+			resp := map[string]interface{}{"success": true, "block": bl}
 			respondWithJSON(w, http.StatusOK, resp)
 		}
 		break
@@ -195,8 +195,8 @@ func (a *App) blockByIndex(w http.ResponseWriter, r *http.Request) {
 }
 
 // chainStatus
-func (a *App) chainStatus (w http.ResponseWriter, r *http.Request) {
-	hash := bc.Chain[len(bc.Chain) - 1].PreviousHash
+func (a *App) chainStatus(w http.ResponseWriter, r *http.Request) {
+	hash := bc.Chain[len(bc.Chain)-1].PreviousHash
 	resp := map[string]interface{}{"length": len(bc.Chain), "hash": hash}
 	respondWithJSON(w, http.StatusOK, resp)
 }
