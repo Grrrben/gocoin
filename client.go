@@ -29,6 +29,7 @@ type Clients struct {
 type clientService interface {
 	addClient(Client) bool
 	num() int
+	getAddress() string
 	syncClients() bool
 	greetClients() bool
 }
@@ -126,7 +127,49 @@ func greet (cl Client) {
 	resp, err := client.Do(req)
 	if err != nil {
 		golog.Warningf("POST request error: %s", err)
-		// I don't want to panic here, but it could be a good idea to
+		// I don't want to panic here, but it might be a good idea to
+		// remove the client from the list
+	}
+	defer resp.Body.Close()
+}
+
+// announceMinedBlocks tells all clients in the network about the newly mined block.
+// it gives the new block to the clients who can add it to their chain.
+func (cls *Clients) announceMinedBlocks(bl Block) {
+	for _, cl := range cls.List {
+		if cl == me {
+			// no need to brag
+			continue
+		}
+		go announceMinedBlock(cl, bl)
+	}
+}
+
+// announceMinedBlock shares the block with other clients. It is done in a goroutine.
+// Other clients should check the validity of the new block on their chain and add it.
+func announceMinedBlock (cl Client, bl Block) {
+	url := fmt.Sprintf("%s%s:%d/mined", cl.Protocol, cl.Ip, cl.Port)
+
+	blockAndSender := map[string]interface{}{"block": bl, "sender": cls.getAddress(me)}
+	payload, err := json.Marshal(blockAndSender)
+	if err != nil {
+		golog.Errorf("Could not marshall block or client. Msg: %s", err)
+		golog.Errorf("Block: %v", bl)
+		golog.Errorf("Client: %v", me)
+	}
+
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payload))
+	if err != nil {
+		golog.Warningf("Request setup error: %s", err)
+		panic(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		golog.Warningf("POST request error: %s", err)
+		// I don't want to panic here, but it might be a good idea to
 		// remove the client from the list
 	}
 	defer resp.Body.Close()
@@ -135,6 +178,11 @@ func greet (cl Client) {
 // num returns an int which represents the number of connected clients.
 func (cls *Clients) num() int {
 	return len(cls.List)
+}
+
+// getAddress returns (URI) address of a client.
+func (cls *Clients) getAddress(cl Client) string {
+	return fmt.Sprintf("%s%s:%d", cl.Protocol, cl.Ip, cl.Port)
 }
 
 // createClientHash
