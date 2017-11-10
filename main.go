@@ -20,9 +20,6 @@ func main() {
 	}
 
 	golog.SetLogDir("/home/grrrben/go/src/blockchain/log")
-	golog.Info("golog info line")
-	golog.Warning("golog warning line")
-	golog.Flush()
 
 	u, err := strconv.ParseUint(*prt, 10, 16) // always gives an uint64...
 	if err != nil {

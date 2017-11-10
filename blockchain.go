@@ -11,8 +11,10 @@ import (
 	"time"
 )
 
-// how many 0's do we want to check
+// how many zero's do we want in the hash
 const hashDifficulty int8 = 4
+// This should be the hash ending in the proof of work
+const hashEndsWith string = "0000"
 
 type Blockchain struct {
 	Chain        []Block
@@ -20,7 +22,7 @@ type Blockchain struct {
 }
 
 type chainService interface {
-	newBlock() bool
+	newBlock() Block
 	newTransaction() bool
 	hash(Block) string
 	lastBlock() Block
@@ -28,6 +30,7 @@ type chainService interface {
 	validProof(proof int64, lastProof int64) bool
 	validate() bool
 	resolve() bool
+	addBlock() bool
 }
 
 // newTransaction will create a Transaction to go into the next Block to be mined.
@@ -72,7 +75,7 @@ func (bc *Blockchain) lastBlock() Block {
 
 func (bc *Blockchain) proofOfWork(lastProof int64) int64 {
 	// Simple Proof of Work Algorithm:
-	// - Find a number p' such that hash(lp') contains leading 4 zeroes, where
+	// - Find a number p' such that hash(lp') contains leading X zeroes, where
 	// - l is the previous Proof, and p' is the new Proof
 	var proof int64 = 0
 	i := 0
@@ -81,7 +84,7 @@ func (bc *Blockchain) proofOfWork(lastProof int64) int64 {
 		i++
 	}
 	if debug {
-		golog.Infof("Proof found in %d cycles (difficulty %d)\n", i, hashDifficulty)
+		golog.Infof("Proof found in %d cycles (difficulty %d)\n", i, hashEndsWith)
 	}
 	return proof
 
@@ -92,14 +95,7 @@ func (bc *Blockchain) validProof(proof int64, lastProof int64) bool {
 	guess := fmt.Sprintf("%d%d", lastProof, proof)
 	guessHash := fmt.Sprintf("%x", sha256.Sum256([]byte(guess)))
 
-	var i int8
-	hashString := ""
-	for i = 0; i < hashDifficulty; i++ {
-		// todo move this out of the loopt
-		hashString = hashString + "0"
-	}
-
-	if guessHash[:hashDifficulty] == hashString {
+	if guessHash[:hashDifficulty] == hashEndsWith {
 		return true
 	}
 	return false
@@ -124,17 +120,84 @@ func (bc *Blockchain) newBlock(proof int64, previousHash string) Block {
 
 	bc.Transactions = nil // reset transactions as the block will be added to the chain
 	bc.Chain = append(bc.Chain, block)
+	cls.announceMinedBlocks(block)
 	return block
 }
 
-// announceMinedBlock tells all clients in the network about the newly mined block.
-// it gives the new block to the clients who can add it to their chain.
-func announceMinedBlock (bl Block) {
-	// todo
-	// for clients, POST block
-	// Other clients should check the validity of the new block on their chain and add it.
+// addBlock performs a validity check on the new block, if valid it add's the block to the chain.
+// Return bool
+func (bc *Blockchain) addBlock(bl Block) bool {
+
+	lastBlock := bc.Chain[len(bc.Chain) - 1]
+
+	if bc.validProof(lastBlock.Proof, bl.Proof) {
+		golog.Info("Added a new block due to an announcement.")
+		bc.Chain = append(bc.Chain, bl)
+		return  true
+	}
+	golog.Warning("Could not add the newly announced block.")
+	return false
 }
 
+// analyseInvalidBlock
+// shows us why a newly sent block could not be added to the chain.
+// and tries to add more blocks if we are missing multiple.
+func (bc *Blockchain) analyseInvalidBlock(bl Block, sender string) bool {
+
+	lastBlock := bc.Chain[len(bc.Chain) - 1]
+
+	golog.Info("----------------------------------")
+	golog.Infof("Analysing block: index: %d", bl.Index)
+	golog.Infof("%v", bl)
+	golog.Infof("Last block: index: %d", lastBlock.Index)
+	golog.Infof("%v", lastBlock)
+
+	if lastBlock.Index < (bl.Index - 1) {
+		var i int64 // 0
+		for {
+			i++
+			var nextBlock Block
+
+			url := fmt.Sprintf("%s/block/index/%d", sender, lastBlock.Index + i)
+			golog.Infof("Fetching block %d from $s", lastBlock.Index + i, sender)
+
+			resp, err := http.Get(url)
+			if err != nil {
+				golog.Warningf("Request error: %s", err)
+				golog.Info("----------------------------------")
+				return false
+			}
+
+			decodingErr := json.NewDecoder(resp.Body).Decode(&nextBlock)
+			if decodingErr != nil {
+				golog.Warningf("Decoding error: %s", err)
+				golog.Info("----------------------------------")
+				return false
+			}
+
+			success := bc.addBlock(nextBlock)
+			if success == false {
+				golog.Warningf("Could not add block %d from $s", lastBlock.Index + i, sender)
+				golog.Info("----------------------------------")
+				return false
+			}
+			defer resp.Body.Close()
+
+			if (lastBlock.Index + i) == bl.Index {
+				golog.Infof("Successfully added %d blocks", i)
+				break
+			}
+		}
+	} else {
+		// something else went wrong.
+		golog.Warning("Unable to analyse")
+		golog.Info("----------------------------------")
+		return false
+	}
+
+	golog.Info("----------------------------------")
+	return true
+}
 // initBlockchain initialises the blockchain
 // Returns a pointer to the blockchain object that the app can alter later on
 func initBlockchain() *Blockchain {
@@ -143,14 +206,17 @@ func initBlockchain() *Blockchain {
 		Chain:        make([]Block, 0),
 		Transactions: make([]Transaction, 0),
 	}
-	if debug {
-		golog.Infof("init Blockchain\n %v\n", newBlockchain)
+	golog.Infof("init Blockchain\n %v\n", newBlockchain)
+
+	if me.Port == 8000 {
+		// Mother node. Adding a first, Genesis, Block to the Chain
+		b := newBlockchain.newBlock(100, "_")
+		golog.Infof("Adding Genesis Block:\n %v", b)
+	} else {
+		newBlockchain.resolve()
+		golog.Infof("Resolving the blockchain")
 	}
-	// adding a first, Genesis, Block to the Chain
-	b := newBlockchain.newBlock(100, "_")
-	if debug {
-		golog.Infof("adding a Block:\n %v\n", b)
-	}
+
 	return newBlockchain // pointer
 }
 

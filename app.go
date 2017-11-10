@@ -11,6 +11,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/grrrben/golog"
 	"os"
+	"strconv"
 )
 
 type Server struct {
@@ -31,10 +32,6 @@ type App struct {
 
 func (a *App) Initialize(port uint16) {
 	config = GetConfig()
-	bc = initBlockchain()
-
-	golog.Info("Starting with a base blockchain:")
-	golog.Infof("Blockchain:\n %v\n", bc)
 
 	// add the Client to the stack
 	cls = initClients() // a pointer to the Clients struct
@@ -54,6 +51,10 @@ func (a *App) Initialize(port uint16) {
 	// register me at all other Clients
 	cls.greetClients()
 
+	bc = initBlockchain()
+	golog.Info("Starting with a base blockchain:")
+	golog.Infof("Blockchain:\n %v\n", bc)
+
 	a.Router = mux.NewRouter()
 	a.initializeRoutes()
 }
@@ -72,6 +73,8 @@ func (a *App) initializeRoutes() {
 	// blocks
 	a.Router.HandleFunc("/block", a.lastblock).Methods("GET")
 	a.Router.HandleFunc("/block/{hash}", a.block).Methods("GET")
+	a.Router.HandleFunc("/block/index/{index}", a.blockByIndex).Methods("GET")
+	a.Router.HandleFunc("/mined", a.minedBlock).Methods("POST")
 	// mining and chaining
 	a.Router.HandleFunc("/mine", a.mine).Methods("GET")
 	a.Router.HandleFunc("/chain", a.chain).Methods("GET")
@@ -85,6 +88,53 @@ func (a *App) initializeRoutes() {
 
 func (a *App) index(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, "Hello world")
+}
+
+// minedBlock is a receiver for blocks mined by other clients.
+// It catches the newly mined block and checks for validity on his own chain
+// If it is valid the block is added and a statusOk is returned.
+// Otherwise it gives an error
+func (a *App) minedBlock(w http.ResponseWriter, r *http.Request) {
+	// fetching the block that came with the request
+	decoder := json.NewDecoder(r.Body)
+
+	type Payload struct {
+		NewBlock Block `json:"block"`
+		Sender string `json:"sender"`
+	}
+
+	var payload Payload
+	err := decoder.Decode(&payload)
+	if err != nil {
+		golog.Warning("Could not decode postdata of new block")
+		respondWithError(w, http.StatusBadRequest, "invalid json")
+		panic(err)
+	}
+	success := bc.addBlock(payload.NewBlock)
+
+	if success {
+		resp := map[string]interface{}{
+			"success":      true,
+			"message":      "New block added",
+		}
+		respondWithJSON(w, http.StatusOK, resp)
+	} else {
+		// todo analyse
+		repair := bc.analyseInvalidBlock(payload.NewBlock, payload.Sender)
+
+		if (repair == false) {
+			// better resolve...
+			respondWithError(w, http.StatusConflict, "Invalid block")
+		} else {
+			resp := map[string]interface{}{
+				"success":      true,
+				"message":      "New blocks added",
+			}
+			respondWithJSON(w, http.StatusOK, resp)
+		}
+
+
+	}
 }
 
 // resolve Resolving conflict between chains in the network
@@ -117,6 +167,32 @@ func (a *App) block(w http.ResponseWriter, r *http.Request) {
 
 	if found == false {
 		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Could not find block by hash %s", hash))
+	}
+}
+
+// blockByIndex Serves single block identified by it's index
+func (a *App) blockByIndex(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	rawIndex := vars["index"]
+
+	index, err := strconv.ParseInt(rawIndex, 10, 16) // always gives an uint64...
+	if err != nil {
+		golog.Errorf("Unable to cast block Index %s to int: %s", rawIndex, err)
+	}
+
+	found := false
+
+	for _, bl := range bc.Chain {
+		if bl.Index == index {
+			found = true
+			resp := map[string]interface{}{"success": true,"block": bl}
+			respondWithJSON(w, http.StatusOK, resp)
+		}
+		break
+	}
+
+	if found == false {
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Could not find block by index %s", index))
 	}
 }
 
