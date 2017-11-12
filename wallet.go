@@ -18,9 +18,7 @@ func createWallet() wallet {
 	var buf bytes.Buffer
 	err := binary.Write(&buf, binary.BigEndian, time.Now().Unix())
 	if err != nil {
-		if debug {
-			golog.Infof("Could not createWallet. Msg: %s", err)
-		}
+		golog.Warningf("Could not createWallet. Msg: %s", err)
 	}
 
 	w := wallet{

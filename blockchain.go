@@ -44,9 +44,7 @@ func (bc *Blockchain) newTransaction(tr Transaction) int64 {
 
 // Hash Creates a SHA-256 hash of a Block
 func hash(b Block) string {
-	if debug {
-		golog.Infof("hashing block %d\n", b.Index)
-	}
+	golog.Infof("hashing block %d\n", b.Index)
 
 	// Data for binary.Write must be a fixed-size value or a slice of fixed-size values,
 	// or a pointer to such data.
@@ -54,17 +52,13 @@ func hash(b Block) string {
 	// @todo might be able to fix it with a char(length) instead of string?
 	jsonblock, errr := json.Marshal(b)
 	if errr != nil {
-		if debug {
-			golog.Errorf("Error: %s", errr)
-		}
+		golog.Errorf("Error: %s", errr)
 	}
 
 	var buf bytes.Buffer
 	err := binary.Write(&buf, binary.BigEndian, jsonblock)
 	if err != nil {
-		if debug {
-			golog.Errorf("Could not compute hash: %s", err)
-		}
+		golog.Errorf("Could not compute hash: %s", err)
 	}
 	return fmt.Sprintf("%x", sha256.Sum256(buf.Bytes())) // %x; base 16, with lower-case letters for a-f
 }
@@ -84,9 +78,7 @@ func (bc *Blockchain) proofOfWork(lastProof int64) int64 {
 		proof += 1
 		i++
 	}
-	if debug {
-		golog.Infof("Proof found in %d cycles (difficulty %d)\n", i, hashEndsWith)
-	}
+	golog.Infof("Proof found in %d cycles (difficulty %d)\n", i, hashEndsWith)
 	return proof
 
 }
@@ -227,14 +219,10 @@ func initBlockchain() *Blockchain {
 func (bc *Blockchain) validate() bool {
 
 	chainLength := len(bc.Chain)
-	if debug {
-		golog.Infof("Validating a chain with a chainLength of %d\n", chainLength)
-	}
+	golog.Infof("Validating a chain with a chainLength of %d\n", chainLength)
 
 	if chainLength == 1 {
-		if debug {
-			golog.Info("chain has only one block yet, thus  valid")
-		}
+		golog.Info("chain has only one block yet, thus  valid")
 		return true
 	}
 
@@ -246,11 +234,9 @@ func (bc *Blockchain) validate() bool {
 		current := bc.Chain[i]
 
 		if current.PreviousHash != hash(previous) {
-			if debug {
-				golog.Info("invalid Hash")
-				golog.Infof("Previous block: %d\n", previous.Index)
-				golog.Infof("Current block: %d\n", current.Index)
-			}
+			golog.Warning("invalid Hash")
+			golog.Warningf("Previous block: %d\n", previous.Index)
+			golog.Warningf("Current block: %d\n", current.Index)
 			return false
 		}
 
@@ -258,11 +244,9 @@ func (bc *Blockchain) validate() bool {
 		// if not self.valid_proof(last_block['proof'], block['proof']):
 		// return False
 		if !bc.validProof(previous.Proof, current.Proof) {
-			if debug {
-				golog.Info("invalid proof")
-				golog.Infof("Previous block: %d\n", previous.Index)
-				golog.Infof("Current block: %d\n", current.Index)
-			}
+			golog.Warning("invalid proof")
+			golog.Warningf("Previous block: %d\n", previous.Index)
+			golog.Warningf("Current block: %d\n", current.Index)
 			return false
 		}
 	}
