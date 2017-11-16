@@ -8,16 +8,11 @@ import (
 
 var bc *Blockchain
 var cls *Clients
-var debug bool
 
 func main() {
 	prt := flag.String("p", "8000", "Port on which the app will run, defaults to 8000")
-	verbose := flag.String("verbose", "0", "Verbose, show debug messages when set (1)")
+	clientName:= flag.String("name", "0", "Set a name for the client")
 	flag.Parse()
-
-	if *verbose == "1" {
-		debug = true
-	}
 
 	golog.SetLogDir("/home/grrrben/go/src/blockchain/log")
 
@@ -30,6 +25,6 @@ func main() {
 	clientPortNr := uint16(u)
 
 	a := App{}
-	a.Initialize(clientPortNr)
+	a.Initialize(clientPortNr, *clientName)
 	a.Run(clientPortNr)
 }

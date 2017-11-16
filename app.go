@@ -30,7 +30,7 @@ type App struct {
 	DB     *sql.DB
 }
 
-func (a *App) Initialize(port uint16) {
+func (a *App) Initialize(port uint16, name string) {
 	config = GetConfig()
 
 	// add the Client to the stack
@@ -39,7 +39,7 @@ func (a *App) Initialize(port uint16) {
 		Protocol: "http://",
 		Ip:       "127.0.0.1",
 		Port:     port,
-		Name:     "client1",
+		Name:     name,
 		Hash:     createClientHash("127.0.0.1", port, "client1"),
 	}
 
