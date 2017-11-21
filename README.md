@@ -12,11 +12,10 @@ After building the app it will run on port 8000 unless a -p flag is set.
 
 ## Flags
 
-`-p` Port number on which the client will run.
+`-name` The name of your client. Optional.  
+  
+`-p` Port number on which the client will run. If omitted, the client will run on port `8000`.  
 Usage: `-p=8001`
-
-`--verbose` Verbose will let the app show debug messages in the terminal.
-Usage: `--verbose=1`
 
 ## API calls
 

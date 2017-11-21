@@ -30,17 +30,23 @@ type App struct {
 	DB     *sql.DB
 }
 
-func (a *App) Initialize(port uint16) {
+func (a *App) Initialize() {
 	config = GetConfig()
+
+	name, err := os.Hostname()
+	if err != nil {
+		fmt.Printf("Oops: %v\n", err)
+		return
+	}
 
 	// add the Client to the stack
 	cls = initClients() // a pointer to the Clients struct
 	cl := Client{
 		Protocol: "http://",
-		Ip:       "127.0.0.1",
-		Port:     port,
-		Name:     "client1",
-		Hash:     createClientHash("127.0.0.1", port, "client1"),
+		Hostname: name,
+		Port:     clientPort,
+		Name:     *clientName,
+		Hash:     createClientHash(name, clientPort, *clientName),
 	}
 
 	me = cl
@@ -54,13 +60,14 @@ func (a *App) Initialize(port uint16) {
 	bc = initBlockchain()
 	golog.Info("Starting with a base blockchain:")
 	golog.Infof("Blockchain:\n %v\n", bc)
+	golog.Flush()
 
 	a.Router = mux.NewRouter()
 	a.initializeRoutes()
 }
 
-func (a *App) Run(port uint16) {
-	p := fmt.Sprintf("%d", port)
+func (a *App) Run() {
+	p := fmt.Sprintf("%d", clientPort)
 	fmt.Println("Starting server")
 	fmt.Printf("Running on Port %s\n", p)
 	log.Fatal(http.ListenAndServe(":"+p, a.Router))
@@ -213,7 +220,7 @@ func (a *App) connectClient(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	newCl.Hash = createClientHash(newCl.Ip, newCl.Port, newCl.Name)
+	newCl.Hash = createClientHash(newCl.Hostname, newCl.Port, newCl.Name)
 	// register the client
 	cls.addClient(newCl)
 

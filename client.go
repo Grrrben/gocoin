@@ -13,9 +13,8 @@ import (
 // this is me, a client
 var me Client
 
-// @todo Clients via IP
 type Client struct {
-	Ip       string
+	Hostname string
 	Protocol string
 	Port     uint16
 	Name     string
@@ -107,7 +106,7 @@ func (cls *Clients) greetClients() bool {
 // greet makes a call to a client cl to make this node known within the network.
 func greet(cl Client) {
 	// POST to /client
-	url := fmt.Sprintf("%s%s:%d/client", cl.Protocol, cl.Ip, cl.Port)
+	url := fmt.Sprintf("%s%s:%d/client", cl.Protocol, cl.Hostname, cl.Port)
 	golog.Infof("client URL: %s\n", url)
 
 	payload, err := json.Marshal(me)
@@ -148,7 +147,7 @@ func (cls *Clients) announceMinedBlocks(bl Block) {
 // announceMinedBlock shares the block with other clients. It is done in a goroutine.
 // Other clients should check the validity of the new block on their chain and add it.
 func announceMinedBlock(cl Client, bl Block) {
-	url := fmt.Sprintf("%s%s:%d/mined", cl.Protocol, cl.Ip, cl.Port)
+	url := fmt.Sprintf("%s%s:%d/mined", cl.Protocol, cl.Hostname, cl.Port)
 
 	blockAndSender := map[string]interface{}{"block": bl, "sender": cls.getAddress(me)}
 	payload, err := json.Marshal(blockAndSender)
@@ -182,7 +181,7 @@ func (cls *Clients) num() int {
 
 // getAddress returns (URI) address of a client.
 func (cls *Clients) getAddress(cl Client) string {
-	return fmt.Sprintf("%s%s:%d", cl.Protocol, cl.Ip, cl.Port)
+	return fmt.Sprintf("%s%s:%d", cl.Protocol, cl.Hostname, cl.Port)
 }
 
 // createClientHash

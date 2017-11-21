@@ -263,7 +263,7 @@ func (bc *Blockchain) resolve() bool {
 		if cl == me {
 			continue
 		}
-		url := fmt.Sprintf("%s%s:%d/chain", cl.Protocol, cl.Ip, cl.Port)
+		url := fmt.Sprintf("%s%s:%d/chain", cl.Protocol, cl.Hostname, cl.Port)
 		golog.Infof("%s\n", url)
 
 		resp, err := http.Get(url)

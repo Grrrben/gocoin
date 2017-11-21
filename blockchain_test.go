@@ -14,7 +14,7 @@ func init() {
 	cls = initClients()
 	me = Client{
 		Protocol: "http://",
-		Ip:       "127.0.0.1",
+		Hostname: "127.0.0.1",
 		Port:     8000,
 		Name:     "client1",
 		Hash:     createClientHash("127.0.0.1", 8000, "test client"),

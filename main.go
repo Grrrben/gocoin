@@ -4,22 +4,28 @@ import (
 	"flag"
 	"github.com/grrrben/golog"
 	"strconv"
+	"path/filepath"
+	"os"
+	"fmt"
 )
 
 var bc *Blockchain
 var cls *Clients
-var debug bool
+
+var clientPort uint16
+var clientName *string
 
 func main() {
 	prt := flag.String("p", "8000", "Port on which the app will run, defaults to 8000")
-	verbose := flag.String("verbose", "0", "Verbose, show debug messages when set (1)")
+	clientName = flag.String("name", "0", "Set a name for the client")
 	flag.Parse()
 
-	if *verbose == "1" {
-		debug = true
+	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+		golog.Fatalf("Could not set a logdir. Msg %s", err)
 	}
 
-	golog.SetLogDir("/home/grrrben/go/src/blockchain/log")
+	golog.SetLogDir(fmt.Sprintf("%s/log", dir))
 
 	u, err := strconv.ParseUint(*prt, 10, 16) // always gives an uint64...
 	if err != nil {
@@ -27,9 +33,9 @@ func main() {
 	}
 	// different Clients can have different ports,
 	// used to connect multiple Clients in debug.
-	clientPortNr := uint16(u)
+	clientPort = uint16(u)
 
 	a := App{}
-	a.Initialize(clientPortNr)
-	a.Run(clientPortNr)
+	a.Initialize()
+	a.Run()
 }
