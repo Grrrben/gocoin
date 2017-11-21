@@ -107,7 +107,7 @@ func (a *App) wallet(w http.ResponseWriter, r *http.Request) {
 
 	resp := map[string]interface{}{
 		"success": true,
-		"credit": getWalletCredits(hash),
+		"credit":  getWalletCredits(hash),
 	}
 
 	respondWithJSON(w, http.StatusOK, resp)
@@ -130,7 +130,7 @@ func (a *App) transactions(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	resp := map[string]interface{}{
-		"success": true,
+		"success":      true,
 		"transactions": transactions,
 	}
 
@@ -146,7 +146,7 @@ func (a *App) newTransaction(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&tr)
 	if err != nil {
 		respondWithError(w, http.StatusUnprocessableEntity, "Invalid Transaction (Unable to decode)")
-	} else if !validHash(tr.Sender){
+	} else if !validHash(tr.Sender) {
 		respondWithError(w, http.StatusUnprocessableEntity, "Invalid Transaction (Sender invalid)")
 	} else if !validHash(tr.Recipient) {
 		respondWithError(w, http.StatusUnprocessableEntity, "Invalid Transaction (Recipient invalid)")

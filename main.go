@@ -2,11 +2,11 @@ package main
 
 import (
 	"flag"
-	"github.com/grrrben/golog"
-	"strconv"
-	"path/filepath"
-	"os"
 	"fmt"
+	"github.com/grrrben/golog"
+	"os"
+	"path/filepath"
+	"strconv"
 )
 
 var bc *Blockchain
