@@ -25,15 +25,32 @@ Postman [collection](https://www.getpostman.com/collections/ca46387e102621040d2c
 
 [POST] `http://localhost:8000/transaction`
 
-Add a new transaction
+Add a new transaction:
 ```
 {
- "sender": "my address",
- "recipient": "someone else's address",
+ "sender": "fad5e7a92f1c43b1523614336a07f98b894bb80fee06b6763b50ab03b597d5f4",
+ "recipient": "fad5e7a92f1c43b1523614336a07f98b894bb80fee06b6763b50ab03b597d5f4",
  "amount": 5
 }
 ```
 
+The transaction must have valid hashes for sender and recipient otherwise a 422 is returned with a error message.  
+
+`Invalid Transaction (Unable to decode)`  
+`Invalid Transaction (Sender invalid)`  
+`Invalid Transaction (Recipient invalid)`  
+`Invalid Transaction (Insufficient Credit)`  
+
+[GET] `http://localhost:8000/transactions/{hash}`
+
+Shows all transactions of a wallet with hash {hash}.  
+
+### Wallet
+
+[GET] `http://localhost:8000/wallet/{hash}`
+
+Shows some stats of a wallet identified by hash {hash}, including the credits available.  
+	
 ### Blocks
 
 [GET] `http://localhost:8000/block`  
@@ -204,6 +221,6 @@ The POSTed data should be consistent with a Client.
 ## TODO
 
 + Standarise transactions
++ Public/Private key pairs in transactions
 + Share transactions
-+ GET transaction call, based on hash id
 + Validate transactions

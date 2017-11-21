@@ -17,7 +17,7 @@ func init() {
 		Hostname: "127.0.0.1",
 		Port:     8000,
 		Name:     "client1",
-		Hash:     createClientHash("127.0.0.1", 8000, "test client"),
+		Hash:     createClientHash(),
 	}
 	cls.addClient(me)
 }
