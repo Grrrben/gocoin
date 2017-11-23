@@ -192,7 +192,7 @@ func initBlockchain() *Blockchain {
 
 	if me.Port == 8000 {
 		// Mother node. Adding a first, Genesis, Block to the Chain
-		b := newBlockchain.newBlock(100, "_")
+		b := newBlockchain.newBlock(100, zerohash)
 		golog.Infof("Adding Genesis Block:\n %v", b)
 	} else {
 		newBlockchain.resolve()

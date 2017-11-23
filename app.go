@@ -319,7 +319,7 @@ func (a *App) mine(w http.ResponseWriter, r *http.Request) {
 	lastProof := lastBlock.Proof
 
 	proof := bc.proofOfWork(lastProof)
-	tr := Transaction{"0", me.Hash, 1}
+	tr := Transaction{zerohash, me.Hash, 1}
 	bc.newTransaction(tr)
 	block := bc.newBlock(proof, "")
 

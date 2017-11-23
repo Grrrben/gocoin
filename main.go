@@ -15,6 +15,8 @@ var cls *Clients
 var clientPort uint16
 var clientName *string
 
+const zerohash = "0000000000000000000000000000000000000000000000000000000000000000"
+
 func main() {
 	prt := flag.String("p", "8000", "Port on which the app will run, defaults to 8000")
 	clientName = flag.String("name", "0", "Set a name for the client")
