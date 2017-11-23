@@ -2,8 +2,8 @@ package main
 
 import (
 	"errors"
-	"regexp"
 	"log"
+	"regexp"
 )
 
 type Transaction struct {
@@ -28,13 +28,14 @@ func validHash(hash string) bool {
 	}
 }
 
+// checkTransaction performs multiple checks on a transaction
 func checkTransaction(tr Transaction) (success bool, err error) {
 	if !validHash(tr.Sender) {
-		return false, errors.New("Invalid Transaction (Sender invalid)")
+		return false, errors.New("invalid transaction (sender invalid)")
 	} else if !validHash(tr.Recipient) {
-		return false, errors.New("Invalid Transaction (Recipient invalid)")
+		return false, errors.New("invalid transaction (recipient invalid)")
 	} else if getWalletCredits(tr.Sender) < tr.Amount {
-		return false, errors.New("Invalid Transaction (Insufficient Credit)")
+		return false, errors.New("invalid transaction (insufficient credit)")
 	}
 	return true, nil
 }

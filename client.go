@@ -23,14 +23,6 @@ type Clients struct {
 	List []Client
 }
 
-type clientService interface {
-	addClient(Client) bool
-	num() int
-	getAddress() string
-	syncClients() bool
-	greetClients() bool
-}
-
 func initClients() *Clients {
 	cls := &Clients{}
 	return cls
@@ -67,7 +59,6 @@ func (cls *Clients) syncClients() bool {
 		golog.Warningf("Could not get list of Clients on url: %s", url)
 		return false
 	}
-	golog.Infof("Client body:\n%v\n", resp.Body)
 	defer resp.Body.Close()
 	decodingErr := json.NewDecoder(resp.Body).Decode(&externalCls)
 	if decodingErr != nil {
@@ -105,10 +96,7 @@ func (cls *Clients) greetClients() bool {
 func greet(cl Client) {
 	// POST to /client
 	url := fmt.Sprintf("%s%s:%d/client", cl.Protocol, cl.Hostname, cl.Port)
-	golog.Infof("client URL: %s\n", url)
-
 	payload, err := json.Marshal(me)
-	golog.Infof("Me: %v\n", me)
 	if err != nil {
 		golog.Warning("Could not marshall client: Me")
 	}
