@@ -143,16 +143,20 @@ func (a *App) transactions(w http.ResponseWriter, r *http.Request) {
 // Amount float32
 func (a *App) newTransaction(w http.ResponseWriter, r *http.Request) {
 	var tr Transaction
+	success := false
+
 	err := json.NewDecoder(r.Body).Decode(&tr)
 	if err != nil {
+		success = false
 		respondWithError(w, http.StatusUnprocessableEntity, "Invalid Transaction (Unable to decode)")
-	} else if !validHash(tr.Sender) {
-		respondWithError(w, http.StatusUnprocessableEntity, "Invalid Transaction (Sender invalid)")
-	} else if !validHash(tr.Recipient) {
-		respondWithError(w, http.StatusUnprocessableEntity, "Invalid Transaction (Recipient invalid)")
-	} else if getWalletCredits(tr.Sender) < tr.Amount {
-		respondWithError(w, http.StatusUnprocessableEntity, "Invalid Transaction (Insufficient Credit)")
 	} else {
+		success, err = checkTransaction(tr)
+		if err != nil {
+			respondWithError(w, http.StatusUnprocessableEntity, err.Error())
+		}
+	}
+
+	if success {
 		// all OK. Add the transaction and serve a success
 		bc.newTransaction(tr)
 		respondWithJSON(w, http.StatusOK, "Transaction added")
