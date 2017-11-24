@@ -14,6 +14,7 @@ type wallet struct {
 	credit float64
 }
 
+// createWallet creates a wallet with a hash and 0 credits
 func createWallet() wallet {
 	var buf bytes.Buffer
 	err := binary.Write(&buf, binary.BigEndian, time.Now().Unix())

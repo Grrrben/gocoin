@@ -31,14 +31,14 @@ func (bc *Blockchain) newTransaction(tr Transaction) int64 {
 }
 
 // Hash Creates a SHA-256 hash of a Block
-func hash(b Block) string {
-	golog.Infof("hashing block %d\n", b.Index)
+func hash(bl Block) string {
+	golog.Infof("hashing block %d\n", bl.Index)
 
 	// Data for binary.Write must be a fixed-size value or a slice of fixed-size values,
 	// or a pointer to such data.
 	// @todo Marshalling the struct to json is a workaround... But it works
 	// @todo might be able to fix it with a char(length) instead of string?
-	jsonblock, errr := json.Marshal(b)
+	jsonblock, errr := json.Marshal(bl)
 	if errr != nil {
 		golog.Errorf("Error: %s", errr)
 	}
@@ -188,7 +188,7 @@ func initBlockchain() *Blockchain {
 		Chain:        make([]Block, 0),
 		Transactions: make([]Transaction, 0),
 	}
-	golog.Infof("init Blockchain\n %v\n", newBlockchain)
+	golog.Infof("init Blockchain\n %v", newBlockchain)
 
 	if me.Port == 8000 {
 		// Mother node. Adding a first, Genesis, Block to the Chain
@@ -209,7 +209,6 @@ func (bc *Blockchain) validate() bool {
 	chainLength := len(bc.Chain)
 
 	if chainLength == 1 {
-		golog.Info("chain has only one block yet, thus  valid")
 		return true
 	}
 
@@ -238,6 +237,19 @@ func (bc *Blockchain) validate() bool {
 		}
 	}
 	return true
+}
+
+// mine Mines a block and puts all transactions in the block
+// An incentive is paid to the miner and the list of transactions is cleared
+func (bc *Blockchain) mine() Block {
+	lastBlock := bc.lastBlock()
+	lastProof := lastBlock.Proof
+
+	proof := bc.proofOfWork(lastProof)
+	tr := Transaction{zerohash, me.Hash, 1}
+	bc.newTransaction(tr)
+	block := bc.newBlock(proof, "")
+	return block
 }
 
 // resolve is the Consensus Algorithm, it resolves conflicts

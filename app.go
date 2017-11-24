@@ -284,11 +284,8 @@ func (a *App) connectClient(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusBadRequest, "invalid json")
 		panic(err)
 	}
-
-	newCl.Hash = createClientHash()
 	// register the client
 	cls.addClient(newCl)
-
 	resp := map[string]interface{}{"Client": newCl, "total": cls.num()}
 	respondWithJSON(w, http.StatusOK, resp)
 }
@@ -315,14 +312,7 @@ func (a *App) validate(w http.ResponseWriter, r *http.Request) {
 // mine Mines a block and puts all transactions in the block
 // An incentive is paid to the miner and the list of transactions is cleared
 func (a *App) mine(w http.ResponseWriter, r *http.Request) {
-	lastBlock := bc.lastBlock()
-	lastProof := lastBlock.Proof
-
-	proof := bc.proofOfWork(lastProof)
-	tr := Transaction{zerohash, me.Hash, 1}
-	bc.newTransaction(tr)
-	block := bc.newBlock(proof, "")
-
+	block := bc.mine()
 	resp := map[string]interface{}{
 		"message":      "New block mined.",
 		"Block":        block,
