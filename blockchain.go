@@ -22,18 +22,6 @@ type Blockchain struct {
 	Transactions []Transaction
 }
 
-type chainService interface {
-	newBlock() Block
-	newTransaction() bool
-	hash(Block) string
-	lastBlock() Block
-	proofOfWork(lastProof int64) int64
-	validProof(proof int64, lastProof int64) bool
-	validate() bool
-	resolve() bool
-	addBlock() bool
-}
-
 // newTransaction will create a Transaction to go into the next Block to be mined.
 // The Transaction is stored in the Blockchain obj.
 // Returns (int) the Index of the Block that will hold this Transaction
@@ -43,14 +31,14 @@ func (bc *Blockchain) newTransaction(tr Transaction) int64 {
 }
 
 // Hash Creates a SHA-256 hash of a Block
-func hash(b Block) string {
-	golog.Infof("hashing block %d\n", b.Index)
+func hash(bl Block) string {
+	golog.Infof("hashing block %d\n", bl.Index)
 
 	// Data for binary.Write must be a fixed-size value or a slice of fixed-size values,
 	// or a pointer to such data.
 	// @todo Marshalling the struct to json is a workaround... But it works
 	// @todo might be able to fix it with a char(length) instead of string?
-	jsonblock, errr := json.Marshal(b)
+	jsonblock, errr := json.Marshal(bl)
 	if errr != nil {
 		golog.Errorf("Error: %s", errr)
 	}
@@ -78,7 +66,7 @@ func (bc *Blockchain) proofOfWork(lastProof int64) int64 {
 		proof += 1
 		i++
 	}
-	golog.Infof("Proof found in %d cycles (difficulty %d)\n", i, hashEndsWith)
+	golog.Infof("Proof found in %d cycles (difficulty %s)\n", i, hashEndsWith)
 	return proof
 
 }
@@ -200,11 +188,11 @@ func initBlockchain() *Blockchain {
 		Chain:        make([]Block, 0),
 		Transactions: make([]Transaction, 0),
 	}
-	golog.Infof("init Blockchain\n %v\n", newBlockchain)
+	golog.Infof("init Blockchain\n %v", newBlockchain)
 
 	if me.Port == 8000 {
 		// Mother node. Adding a first, Genesis, Block to the Chain
-		b := newBlockchain.newBlock(100, "_")
+		b := newBlockchain.newBlock(100, zerohash)
 		golog.Infof("Adding Genesis Block:\n %v", b)
 	} else {
 		newBlockchain.resolve()
@@ -219,10 +207,8 @@ func initBlockchain() *Blockchain {
 func (bc *Blockchain) validate() bool {
 
 	chainLength := len(bc.Chain)
-	golog.Infof("Validating a chain with a chainLength of %d\n", chainLength)
 
 	if chainLength == 1 {
-		golog.Info("chain has only one block yet, thus  valid")
 		return true
 	}
 
@@ -253,6 +239,19 @@ func (bc *Blockchain) validate() bool {
 	return true
 }
 
+// mine Mines a block and puts all transactions in the block
+// An incentive is paid to the miner and the list of transactions is cleared
+func (bc *Blockchain) mine() Block {
+	lastBlock := bc.lastBlock()
+	lastProof := lastBlock.Proof
+
+	proof := bc.proofOfWork(lastProof)
+	tr := Transaction{zerohash, me.Hash, 1}
+	bc.newTransaction(tr)
+	block := bc.newBlock(proof, "")
+	return block
+}
+
 // resolve is the Consensus Algorithm, it resolves conflicts
 // by replacing our chain with the longest one in the network.
 // Returns bool. True if our chain was replaced, false if not
@@ -264,8 +263,6 @@ func (bc *Blockchain) resolve() bool {
 			continue
 		}
 		url := fmt.Sprintf("%s%s:%d/chain", cl.Protocol, cl.Hostname, cl.Port)
-		golog.Infof("%s\n", url)
-
 		resp, err := http.Get(url)
 		if err != nil {
 			golog.Warningf("Chain request error: %s", err)
@@ -279,16 +276,12 @@ func (bc *Blockchain) resolve() bool {
 		defer resp.Body.Close()
 
 		if decodingErr != nil {
-			golog.Warningf("Could not decode JSON of external blockchain\n")
-			golog.Warningf("Error: %s\n", err)
+			golog.Warningf("Could not decode JSON of external blockchain: %s", err)
 			continue
 		}
 
 		if len(extChain.Chain) > len(bc.Chain) {
-			golog.Infof("Found a new blockchain with length %d.\n", len(extChain.Chain))
-			golog.Infof("Our blockchain had a length of %d.\n", len(bc.Chain))
-			golog.Infof("Blockchain replaced.")
-
+			golog.Infof("Blockchain replaced. Found length of %d instead of current %d.", len(extChain.Chain), len(bc.Chain))
 			// it might be better to fetch a list of all client's chain length first, then replace ours
 			// with the largest one.
 			bc.Chain = extChain.Chain

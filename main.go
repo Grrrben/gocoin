@@ -2,11 +2,11 @@ package main
 
 import (
 	"flag"
-	"github.com/grrrben/golog"
-	"strconv"
-	"path/filepath"
-	"os"
 	"fmt"
+	"github.com/grrrben/golog"
+	"os"
+	"path/filepath"
+	"strconv"
 )
 
 var bc *Blockchain
@@ -14,6 +14,8 @@ var cls *Clients
 
 var clientPort uint16
 var clientName *string
+
+const zerohash = "0000000000000000000000000000000000000000000000000000000000000000"
 
 func main() {
 	prt := flag.String("p", "8000", "Port on which the app will run, defaults to 8000")

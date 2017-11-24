@@ -46,7 +46,7 @@ func (a *App) Initialize() {
 		Hostname: name,
 		Port:     clientPort,
 		Name:     *clientName,
-		Hash:     createClientHash(name, clientPort, *clientName),
+		Hash:     createClientHash(),
 	}
 
 	me = cl
@@ -77,6 +77,9 @@ func (a *App) initializeRoutes() {
 	a.Router.HandleFunc("/", a.index).Methods("GET")
 	// transactions
 	a.Router.HandleFunc("/transaction", a.newTransaction).Methods("POST")
+	a.Router.HandleFunc("/transactions/{hash}", a.transactions).Methods("GET")
+	// wallet
+	a.Router.HandleFunc("/wallet/{hash}", a.wallet).Methods("GET")
 	// blocks
 	a.Router.HandleFunc("/block", a.lastblock).Methods("GET")
 	a.Router.HandleFunc("/block/{hash}", a.block).Methods("GET")
@@ -95,6 +98,69 @@ func (a *App) initializeRoutes() {
 
 func (a *App) index(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, "Hello world")
+}
+
+// wallet Shows some stats of a wallet, including the credits available
+func (a *App) wallet(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	hash := vars["hash"]
+
+	resp := map[string]interface{}{
+		"success": true,
+		"credit":  getWalletCredits(hash),
+	}
+
+	respondWithJSON(w, http.StatusOK, resp)
+}
+
+// transactions shows all transactions made by a wallet with {hash}
+// {hash} is given by POST data from the call
+func (a *App) transactions(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	hash := vars["hash"]
+
+	transactions := []Transaction{}
+
+	// check all blocks, see if the hash is the sender or receiver.
+	for _, block := range bc.Chain {
+		for _, transaction := range block.Transactions {
+			if transaction.Sender == hash || transaction.Recipient == hash {
+				transactions = append(transactions, transaction)
+			}
+		}
+	}
+	resp := map[string]interface{}{
+		"success":      true,
+		"transactions": transactions,
+	}
+
+	respondWithJSON(w, http.StatusOK, resp)
+}
+
+// newTransaction adds a transaction, which consists of:
+// Sender string
+// Recipient string
+// Amount float32
+func (a *App) newTransaction(w http.ResponseWriter, r *http.Request) {
+	var tr Transaction
+	success := false
+
+	err := json.NewDecoder(r.Body).Decode(&tr)
+	if err != nil {
+		success = false
+		respondWithError(w, http.StatusUnprocessableEntity, "Invalid Transaction (Unable to decode)")
+	} else {
+		success, err = checkTransaction(tr)
+		if err != nil {
+			respondWithError(w, http.StatusUnprocessableEntity, err.Error())
+		}
+	}
+
+	if success {
+		// all OK. Add the transaction and serve a success
+		bc.newTransaction(tr)
+		respondWithJSON(w, http.StatusOK, "Transaction added")
+	}
 }
 
 // minedBlock is a receiver for blocks mined by other clients.
@@ -126,7 +192,6 @@ func (a *App) minedBlock(w http.ResponseWriter, r *http.Request) {
 		}
 		respondWithJSON(w, http.StatusOK, resp)
 	} else {
-		// todo analyse
 		repair := bc.analyseInvalidBlock(payload.NewBlock, payload.Sender)
 
 		if repair == false {
@@ -219,11 +284,8 @@ func (a *App) connectClient(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusBadRequest, "invalid json")
 		panic(err)
 	}
-
-	newCl.Hash = createClientHash(newCl.Hostname, newCl.Port, newCl.Name)
 	// register the client
 	cls.addClient(newCl)
-
 	resp := map[string]interface{}{"Client": newCl, "total": cls.num()}
 	respondWithJSON(w, http.StatusOK, resp)
 }
@@ -232,21 +294,6 @@ func (a *App) connectClient(w http.ResponseWriter, r *http.Request) {
 func (a *App) getClients(w http.ResponseWriter, r *http.Request) {
 	resp := map[string]interface{}{"list": cls.List, "length": len(cls.List)}
 	respondWithJSON(w, http.StatusOK, resp)
-}
-
-// newTransaction adds a transaction, which consists of:
-// Sender string
-// Recipient string
-// Amount float64
-func (a *App) newTransaction(w http.ResponseWriter, r *http.Request) {
-	var tr Transaction
-	err := json.NewDecoder(r.Body).Decode(&tr)
-	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "Invalid Transaction")
-	}
-
-	bc.newTransaction(tr)
-	respondWithJSON(w, http.StatusOK, "Transaction added")
 }
 
 // chain shows the entire blockchain
@@ -265,14 +312,7 @@ func (a *App) validate(w http.ResponseWriter, r *http.Request) {
 // mine Mines a block and puts all transactions in the block
 // An incentive is paid to the miner and the list of transactions is cleared
 func (a *App) mine(w http.ResponseWriter, r *http.Request) {
-	lastBlock := bc.lastBlock()
-	lastProof := lastBlock.Proof
-
-	proof := bc.proofOfWork(lastProof)
-	tr := Transaction{"0", "recipient", 1}
-	bc.newTransaction(tr)
-	block := bc.newBlock(proof, "")
-
+	block := bc.mine()
 	resp := map[string]interface{}{
 		"message":      "New block mined.",
 		"Block":        block,

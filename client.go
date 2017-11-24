@@ -2,8 +2,6 @@ package main
 
 import (
 	"bytes"
-	"crypto/sha256"
-	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"github.com/grrrben/golog"
@@ -18,19 +16,11 @@ type Client struct {
 	Protocol string
 	Port     uint16
 	Name     string
-	Hash     string // todo should be the wallet Hash?
+	Hash     string
 }
 
 type Clients struct {
 	List []Client
-}
-
-type clientService interface {
-	addClient(Client) bool
-	num() int
-	getAddress() string
-	syncClients() bool
-	greetClients() bool
 }
 
 func initClients() *Clients {
@@ -69,7 +59,6 @@ func (cls *Clients) syncClients() bool {
 		golog.Warningf("Could not get list of Clients on url: %s", url)
 		return false
 	}
-	golog.Infof("Client body:\n%v\n", resp.Body)
 	defer resp.Body.Close()
 	decodingErr := json.NewDecoder(resp.Body).Decode(&externalCls)
 	if decodingErr != nil {
@@ -107,10 +96,7 @@ func (cls *Clients) greetClients() bool {
 func greet(cl Client) {
 	// POST to /client
 	url := fmt.Sprintf("%s%s:%d/client", cl.Protocol, cl.Hostname, cl.Port)
-	golog.Infof("client URL: %s\n", url)
-
 	payload, err := json.Marshal(me)
-	golog.Infof("Me: %v\n", me)
 	if err != nil {
 		golog.Warning("Could not marshall client: Me")
 	}
@@ -184,20 +170,9 @@ func (cls *Clients) getAddress(cl Client) string {
 	return fmt.Sprintf("%s%s:%d", cl.Protocol, cl.Hostname, cl.Port)
 }
 
-// createClientHash
-// todo; Should be wallet?
-func createClientHash(ip string, port uint16, name string) string {
-	id := fmt.Sprint("%s-%d-%s", ip, port, name)
-
-	jsonId, errr := json.Marshal(id)
-	if errr != nil {
-		golog.Errorf("Error: %s", errr)
-	}
-
-	var buf bytes.Buffer
-	err := binary.Write(&buf, binary.BigEndian, jsonId)
-	if err != nil {
-		golog.Errorf("Could not compute Client Hash. Msg: %s", err)
-	}
-	return fmt.Sprintf("%x", sha256.Sum256(buf.Bytes())) // %x; base 16, with lower-case letters for a-f
+// createClientHash Creates a wallet and returns the hash of the new wallet.
+// If a clients mines a block, the incentive is sent to this wallet address
+func createClientHash() string {
+	wallet := createWallet()
+	return wallet.hash
 }
