@@ -95,7 +95,7 @@ func (cls *Clients) greetClients() bool {
 // greet makes a call to a client cl to make this node known within the network.
 func greet(cl Client) {
 	// POST to /client
-	url := fmt.Sprintf("%s%s:%d/client", cl.Protocol, cl.Hostname, cl.Port)
+	url := fmt.Sprintf("%s/client", cls.getAddress(cl))
 	payload, err := json.Marshal(me)
 	if err != nil {
 		golog.Warning("Could not marshall client: Me")
@@ -123,8 +123,7 @@ func greet(cl Client) {
 func (cls *Clients) announceMinedBlocks(bl Block) {
 	for _, cl := range cls.List {
 		if cl == me {
-			// no need to brag
-			continue
+			continue // no need to brag
 		}
 		go announceMinedBlock(cl, bl)
 	}
@@ -133,14 +132,12 @@ func (cls *Clients) announceMinedBlocks(bl Block) {
 // announceMinedBlock shares the block with other clients. It is done in a goroutine.
 // Other clients should check the validity of the new block on their chain and add it.
 func announceMinedBlock(cl Client, bl Block) {
-	url := fmt.Sprintf("%s%s:%d/mined", cl.Protocol, cl.Hostname, cl.Port)
+	url := fmt.Sprintf("%s/mined", cls.getAddress(cl))
 
 	blockAndSender := map[string]interface{}{"block": bl, "sender": cls.getAddress(me)}
 	payload, err := json.Marshal(blockAndSender)
 	if err != nil {
 		golog.Errorf("Could not marshall block or client. Msg: %s", err)
-		golog.Errorf("Block: %v", bl)
-		golog.Errorf("Client: %v", me)
 	}
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payload))
