@@ -26,6 +26,7 @@ type Blockchain struct {
 // The Transaction is stored in the Blockchain obj.
 // Returns (int) the Index of the Block that will hold this Transaction
 func (bc *Blockchain) newTransaction(tr Transaction) int64 {
+	tr.Time = time.Now().UnixNano()
 	bc.Transactions = append(bc.Transactions, tr)
 	return bc.lastBlock().Index + 1
 }
@@ -128,6 +129,7 @@ func (bc *Blockchain) analyseInvalidBlock(bl Block, sender string) bool {
 	lastBlock := bc.Chain[len(bc.Chain)-1]
 
 	golog.Info("----------------------------------")
+	defer golog.Info("----------------------------------")
 	golog.Infof("Analysing block: index: %d", bl.Index)
 	golog.Infof("%v", bl)
 	golog.Infof("Last block: index: %d", lastBlock.Index)
@@ -145,21 +147,18 @@ func (bc *Blockchain) analyseInvalidBlock(bl Block, sender string) bool {
 			resp, err := http.Get(url)
 			if err != nil {
 				golog.Warningf("Request error: %s", err)
-				golog.Info("----------------------------------")
 				return false
 			}
 
 			decodingErr := json.NewDecoder(resp.Body).Decode(&nextBlock)
 			if decodingErr != nil {
 				golog.Warningf("Decoding error: %s", err)
-				golog.Info("----------------------------------")
 				return false
 			}
 
 			success := bc.addBlock(nextBlock)
 			if success == false {
 				golog.Warningf("Could not add block %d from %s", lastBlock.Index+i, sender)
-				golog.Info("----------------------------------")
 				return false
 			}
 			defer resp.Body.Close()
@@ -172,11 +171,9 @@ func (bc *Blockchain) analyseInvalidBlock(bl Block, sender string) bool {
 	} else {
 		// something else went wrong.
 		golog.Warning("Unable to analyse")
-		golog.Info("----------------------------------")
 		return false
 	}
 
-	golog.Info("----------------------------------")
 	return true
 }
 
@@ -246,7 +243,7 @@ func (bc *Blockchain) mine() Block {
 	lastProof := lastBlock.Proof
 
 	proof := bc.proofOfWork(lastProof)
-	tr := Transaction{zerohash, me.Hash, 1}
+	tr := Transaction{zerohash, me.Hash, 1, time.Now().UnixNano()}
 	bc.newTransaction(tr)
 	block := bc.newBlock(proof, "")
 	return block

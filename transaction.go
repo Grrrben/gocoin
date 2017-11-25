@@ -1,7 +1,10 @@
 package main
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"errors"
+	"fmt"
 	"log"
 	"regexp"
 )
@@ -10,6 +13,28 @@ type Transaction struct {
 	Sender    string
 	Recipient string
 	Amount    float32
+	Time      int64
+}
+
+type hashable interface {
+	getHash() string
+}
+
+func (tr Transaction) getHash() string {
+	str := tr.Sender + tr.Recipient + fmt.Sprintf("%.8f", tr.Amount) + fmt.Sprintf("%d", tr.Time)
+	hasher := md5.New()
+	hasher.Write([]byte(str))
+	return hex.EncodeToString(hasher.Sum(nil))
+
+}
+
+// checkHashes checks if the hashes of 2 objects are the same
+// objects should have interface hashable.
+func checkHashes(first hashable, second hashable) bool {
+	if first.getHash() == second.getHash() {
+		return true
+	}
+	return false
 }
 
 // validHash checks a hash for length and regex of the hex.
