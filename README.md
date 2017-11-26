@@ -39,11 +39,26 @@ The transaction must have valid hashes for sender and recipient otherwise a 422 
 `Invalid Transaction (Unable to decode)`  
 `Invalid Transaction (Sender invalid)`  
 `Invalid Transaction (Recipient invalid)`  
-`Invalid Transaction (Insufficient Credit)`  
+`Invalid Transaction (Insufficient Credit)`
+
+If the transaction is added the client will distribute the transaction throughout the network.
 
 [GET] `http://localhost:8000/transactions/{hash}`
 
-Shows all transactions of a wallet with hash {hash}.  
+Shows all transactions of a wallet with hash {hash}.
+
+[POST] `http://localhost:8000/transaction/distributed`
+
+Add a new transaction to this client that is distributed by another client:
+
+```
+{
+ "sender": "fad5e7a92f1c43b1523614336a07f98b894bb80fee06b6763b50ab03b597d5f4",
+ "recipient": "fad5e7a92f1c43b1523614336a07f98b894bb80fee06b6763b50ab03b597d5f4",
+ "amount": 1,
+ "time": 1234567890,
+}
+```
 
 ### Wallet
 
@@ -90,7 +105,7 @@ Response identical to `/block`.
 Fetches block with matching (int) index  
 Response identical to `/block`.  
 
-[POST] `http://localhost:8000/mined`  
+[POST] `http://localhost:8000/block/distributed`
 A receiver for blocks mined by other clients.  
 Should contain a (Block) block and a (string) sender. The method is called automatically by other clients when they mined a block.  
 

@@ -31,6 +31,25 @@ func (bc *Blockchain) newTransaction(tr Transaction) int64 {
 	return bc.lastBlock().Index + 1
 }
 
+func (bc *Blockchain) distributeTransaction(tr Transaction) int64 {
+	tr.Time = time.Now().UnixNano()
+	bc.Transactions = append(bc.Transactions, tr)
+	return bc.lastBlock().Index + 1
+}
+
+// isNonExistingTransaction loops the current list of Transactions
+// to check if the new Transactions is already known on this Client
+func (bc *Blockchain) isNonExistingTransaction(newTr Transaction) bool {
+	for _, existingTr := range bc.Transactions {
+		if checkHashesEqual(newTr, existingTr) {
+			return false
+		}
+	}
+	return true
+}
+
+
+
 // Hash Creates a SHA-256 hash of a Block
 func hash(bl Block) string {
 	golog.Infof("hashing block %d\n", bl.Index)

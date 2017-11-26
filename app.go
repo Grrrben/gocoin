@@ -77,6 +77,7 @@ func (a *App) initializeRoutes() {
 	a.Router.HandleFunc("/", a.index).Methods("GET")
 	// transactions
 	a.Router.HandleFunc("/transaction", a.newTransaction).Methods("POST")
+	a.Router.HandleFunc("/transaction/distributed", a.distributedTransaction).Methods("POST")
 	a.Router.HandleFunc("/transactions/{hash}", a.transactions).Methods("GET")
 	// wallet
 	a.Router.HandleFunc("/wallet/{hash}", a.wallet).Methods("GET")
@@ -84,7 +85,7 @@ func (a *App) initializeRoutes() {
 	a.Router.HandleFunc("/block", a.lastblock).Methods("GET")
 	a.Router.HandleFunc("/block/{hash}", a.block).Methods("GET")
 	a.Router.HandleFunc("/block/index/{index}", a.blockByIndex).Methods("GET")
-	a.Router.HandleFunc("/mined", a.minedBlock).Methods("POST")
+	a.Router.HandleFunc("/block/distributed", a.distributedBlock).Methods("POST")
 	// mining and chaining
 	a.Router.HandleFunc("/mine", a.mine).Methods("GET")
 	a.Router.HandleFunc("/chain", a.chain).Methods("GET")
@@ -137,6 +138,37 @@ func (a *App) transactions(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, resp)
 }
 
+// distributedTransaction recieves a transaction from another client in the network.
+// It is used to distribute the _unmined_ transactions throughout the network
+func (a *App) distributedTransaction(w http.ResponseWriter, r *http.Request) {
+	var tr Transaction
+	success := false
+
+	err := json.NewDecoder(r.Body).Decode(&tr)
+	if err != nil {
+		success = false
+		respondWithError(w, http.StatusUnprocessableEntity, "Invalid Transaction (Unable to decode)")
+	} else {
+		if bc.isNonExistingTransaction(tr) {
+			success, err = checkTransaction(tr)
+			if err != nil {
+				success = false
+				respondWithError(w, http.StatusUnprocessableEntity, err.Error())
+			}
+		} else {
+			success = false
+			respondWithError(w, http.StatusUnprocessableEntity, "Invalid Transaction (Already exists)")
+		}
+
+	}
+
+	if success {
+		// all OK. Add the transaction and serve a success
+		bc.newTransaction(tr)
+		respondWithJSON(w, http.StatusOK, "Transaction added")
+	}
+}
+
 // newTransaction adds a transaction, which consists of:
 // Sender string
 // Recipient string
@@ -163,11 +195,11 @@ func (a *App) newTransaction(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// minedBlock is a receiver for blocks mined by other clients.
+// distributedBlock is a receiver for blocks mined by other clients.
 // It catches the newly mined block and checks for validity on his own chain
 // If it is valid the block is added and a statusOk is returned.
 // Otherwise it gives an error
-func (a *App) minedBlock(w http.ResponseWriter, r *http.Request) {
+func (a *App) distributedBlock(w http.ResponseWriter, r *http.Request) {
 	// fetching the block that came with the request
 	decoder := json.NewDecoder(r.Body)
 
@@ -184,6 +216,7 @@ func (a *App) minedBlock(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	success := bc.addBlock(payload.NewBlock)
+	// @todo, check block's transactions with the current transactions.
 
 	if success {
 		resp := map[string]interface{}{

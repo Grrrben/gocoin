@@ -7,6 +7,10 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"encoding/json"
+	"github.com/grrrben/golog"
+	"net/http"
+	"bytes"
 )
 
 type Transaction struct {
@@ -20,6 +24,7 @@ type hashable interface {
 	getHash() string
 }
 
+// getHash a unique hash for a transaction
 func (tr Transaction) getHash() string {
 	str := tr.Sender + tr.Recipient + fmt.Sprintf("%.8f", tr.Amount) + fmt.Sprintf("%d", tr.Time)
 	hasher := md5.New()
@@ -28,9 +33,9 @@ func (tr Transaction) getHash() string {
 
 }
 
-// checkHashes checks if the hashes of 2 objects are the same
+// checkHashesEqual checks if the hashes of 2 objects are the same
 // objects should have interface hashable.
-func checkHashes(first hashable, second hashable) bool {
+func checkHashesEqual(first hashable, second hashable) bool {
 	if first.getHash() == second.getHash() {
 		return true
 	}
@@ -63,4 +68,32 @@ func checkTransaction(tr Transaction) (success bool, err error) {
 		return false, errors.New("invalid transaction (insufficient credit)")
 	}
 	return true, nil
+}
+
+// announceTransaction distributes new transaction in the network
+// It is preferably done in a goroutine.
+func announceTransaction(cl Client, tr Transaction) {
+	url := fmt.Sprintf("%s/transaction/distributed", cls.getAddress(cl))
+
+	transactionAndSender := map[string]interface{}{"transaction": tr, "sender": cls.getAddress(me)}
+	payload, err := json.Marshal(transactionAndSender)
+	if err != nil {
+		golog.Errorf("Could not marshall transaction or client. Msg: %s", err)
+	}
+
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payload))
+	if err != nil {
+		golog.Warningf("Request setup error: %s", err)
+		panic(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		golog.Warningf("POST request error: %s", err)
+		// I don't want to panic here, but it might be a good idea to
+		// remove the client from the list
+	}
+	defer resp.Body.Close()
 }
