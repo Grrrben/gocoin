@@ -215,10 +215,13 @@ func (a *App) distributedBlock(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusBadRequest, "invalid json")
 		panic(err)
 	}
-	success := bc.addBlock(payload.NewBlock)
-	// @todo, check block's transactions with the current transactions.
+	block, err := bc.addBlock(payload.NewBlock)
 
-	if success {
+	if err == nil {
+		// @todo, check block's transactions with the current transactions.
+
+		bc.clearTransactions(block.Transactions)
+
 		resp := map[string]interface{}{
 			"success": true,
 			"message": "New block added",

@@ -9,6 +9,7 @@ import (
 	"github.com/grrrben/golog"
 	"net/http"
 	"time"
+	"errors"
 )
 
 // how many zero's do we want in the hash
@@ -48,7 +49,24 @@ func (bc *Blockchain) isNonExistingTransaction(newTr Transaction) bool {
 	return true
 }
 
+func (bc *Blockchain) clearTransactions(trs []Transaction) {
+	var hashesInBlock = map[string]Transaction{}
+	//[]string{}
+	//hashesInBlock := []string{}
+	// get a list of all hashes
+	for _, tr := range trs {
+		hashesInBlock[tr.getHash()] = tr
+	}
 
+	for i, tr := range bc.Transactions {
+		// To test for a key without retrieving the value, use an underscore in place of the first value.
+		// The second value (exists) is a bool that is true if the key exists in the map, and false if not.
+		_, exists := hashesInBlock[tr.getHash()]
+		if exists {
+			bc.Transactions = append(bc.Transactions[:i], bc.Transactions[i+1:]...)
+		}
+	}
+}
 
 // Hash Creates a SHA-256 hash of a Block
 func hash(bl Block) string {
@@ -127,17 +145,16 @@ func (bc *Blockchain) newBlock(proof int64, previousHash string) Block {
 
 // addBlock performs a validity check on the new block, if valid it add's the block to the chain.
 // Return bool
-func (bc *Blockchain) addBlock(bl Block) bool {
+func (bc *Blockchain) addBlock(bl Block) (Block, error) {
 
 	lastBlock := bc.Chain[len(bc.Chain)-1]
 
 	if bc.validProof(lastBlock.Proof, bl.Proof) {
 		golog.Info("Added a new block due to an announcement.")
 		bc.Chain = append(bc.Chain, bl)
-		return true
+		return bl, nil
 	}
-	golog.Warning("Could not add the newly announced block.")
-	return false
+	return bl, errors.New("Could not add the newly announced block.")
 }
 
 // analyseInvalidBlock
@@ -175,9 +192,9 @@ func (bc *Blockchain) analyseInvalidBlock(bl Block, sender string) bool {
 				return false
 			}
 
-			success := bc.addBlock(nextBlock)
-			if success == false {
-				golog.Warningf("Could not add block %d from %s", lastBlock.Index+i, sender)
+			_, err = bc.addBlock(nextBlock)
+			if err != nil {
+				golog.Warningf("Could not add block %d from %s: %s", lastBlock.Index+i, sender, err.Error())
 				return false
 			}
 			defer resp.Body.Close()
