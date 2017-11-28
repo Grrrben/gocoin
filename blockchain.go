@@ -25,17 +25,19 @@ type Blockchain struct {
 
 // newTransaction will create a Transaction to go into the next Block to be mined.
 // The Transaction is stored in the Blockchain obj.
-// Returns (int) the Index of the Block that will hold this Transaction
-func (bc *Blockchain) newTransaction(tr Transaction) int64 {
-	tr.Time = time.Now().UnixNano()
-	bc.Transactions = append(bc.Transactions, tr)
-	return bc.lastBlock().Index + 1
-}
+// Returns the Transation with an added Time property
+func (bc *Blockchain) newTransaction(transaction Transaction) (tr Transaction, err error) {
+	_, err = checkTransaction(transaction)
 
-func (bc *Blockchain) distributeTransaction(tr Transaction) int64 {
-	tr.Time = time.Now().UnixNano()
-	bc.Transactions = append(bc.Transactions, tr)
-	return bc.lastBlock().Index + 1
+	if err != nil {
+		return transaction, err
+	} else {
+		if transaction.Time == 0 {
+			transaction.Time = time.Now().UnixNano()
+		}
+		bc.Transactions = append(bc.Transactions, transaction)
+		return transaction, nil
+	}
 }
 
 // isNonExistingTransaction loops the current list of Transactions
@@ -274,15 +276,19 @@ func (bc *Blockchain) validate() bool {
 
 // mine Mines a block and puts all transactions in the block
 // An incentive is paid to the miner and the list of transactions is cleared
-func (bc *Blockchain) mine() Block {
+func (bc *Blockchain) mine() (Block, error) {
+	var block Block
 	lastBlock := bc.lastBlock()
 	lastProof := lastBlock.Proof
 
 	proof := bc.proofOfWork(lastProof)
-	tr := Transaction{zerohash, me.Hash, 1, time.Now().UnixNano()}
-	bc.newTransaction(tr)
-	block := bc.newBlock(proof, "")
-	return block
+	transaction := Transaction{zerohash, me.Hash, 1, time.Now().UnixNano()}
+	_, err := bc.newTransaction(transaction)
+	if err != nil {
+		return block, err
+	}
+	block = bc.newBlock(proof, "")
+	return block, nil
 }
 
 // resolve is the Consensus Algorithm, it resolves conflicts

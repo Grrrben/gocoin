@@ -129,12 +129,14 @@ func (cls *Clients) announceMinedBlocks(bl Block) {
 	}
 }
 
-// announceTransactions tells all clients in the network about the new Transaction.
-func (cls *Clients) announceTransactions(tr Transaction) {
+// distributeTransaction tells all clients in the network about the new Transaction.
+func (cls *Clients) distributeTransaction(tr Transaction) {
+	golog.Infof("Announcing transaction to %d clients", len(cls.List))
 	for _, cl := range cls.List {
 		if cl == me {
 			continue // no need to brag
 		}
+		golog.Info("Announcing transaction")
 		go announceTransaction(cl, tr)
 	}
 }

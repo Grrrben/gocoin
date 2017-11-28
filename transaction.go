@@ -76,6 +76,7 @@ func announceTransaction(cl Client, tr Transaction) {
 	url := fmt.Sprintf("%s/transaction/distributed", cls.getAddress(cl))
 
 	transactionAndSender := map[string]interface{}{"transaction": tr, "sender": cls.getAddress(me)}
+	golog.Infof("transactionAndSender to be distributed:\n %s", transactionAndSender)
 	payload, err := json.Marshal(transactionAndSender)
 	if err != nil {
 		golog.Errorf("Could not marshall transaction or client. Msg: %s", err)
@@ -95,5 +96,7 @@ func announceTransaction(cl Client, tr Transaction) {
 		// I don't want to panic here, but it might be a good idea to
 		// remove the client from the list
 	}
+	golog.Info("Transaction distributed")
+	golog.Flush()
 	defer resp.Body.Close()
 }
