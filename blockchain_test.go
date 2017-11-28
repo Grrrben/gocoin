@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"testing"
+	"time"
 )
 
 // Testing a couple of blockchain related functions on a base chain
@@ -43,13 +44,13 @@ func TestNewTransaction(t *testing.T) {
 		"sender",
 		"receiver",
 		1,
+		time.Now().UnixNano(),
 	}
 
-	newBlockIndex := bc.newTransaction(transaction)
-	lastBlockIndex := bc.lastBlock().Index + 1
+	_, e := bc.newTransaction(transaction)
 
-	if newBlockIndex != lastBlockIndex {
-		t.Errorf("Index of new block fails. Got %d, Want %d", newBlockIndex, lastBlockIndex)
+	if e == nil {
+		t.Errorf("Expected an error when adding an invalid transaction")
 	}
 }
 

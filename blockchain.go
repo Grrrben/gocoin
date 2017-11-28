@@ -9,6 +9,7 @@ import (
 	"github.com/grrrben/golog"
 	"net/http"
 	"time"
+	"errors"
 )
 
 // how many zero's do we want in the hash
@@ -24,10 +25,51 @@ type Blockchain struct {
 
 // newTransaction will create a Transaction to go into the next Block to be mined.
 // The Transaction is stored in the Blockchain obj.
-// Returns (int) the Index of the Block that will hold this Transaction
-func (bc *Blockchain) newTransaction(tr Transaction) int64 {
-	bc.Transactions = append(bc.Transactions, tr)
-	return bc.lastBlock().Index + 1
+// Returns the Transation with an added Time property
+func (bc *Blockchain) newTransaction(transaction Transaction) (tr Transaction, err error) {
+	_, err = checkTransaction(transaction)
+
+	if err != nil {
+		return transaction, err
+	} else {
+		if transaction.Time == 0 {
+			transaction.Time = time.Now().UnixNano()
+		}
+		bc.Transactions = append(bc.Transactions, transaction)
+		return transaction, nil
+	}
+}
+
+// isNonExistingTransaction loops the current list of Transactions
+// to check if the new Transactions is already known on this Client
+func (bc *Blockchain) isNonExistingTransaction(newTr Transaction) bool {
+	for _, existingTr := range bc.Transactions {
+		if checkHashesEqual(newTr, existingTr) {
+			return false
+		}
+	}
+	return true
+}
+
+// clearTransactions loops all transactions in this client and filters out all transactions that are
+// persisted in the mined block
+func (bc *Blockchain) clearTransactions(trs []Transaction) {
+	var hashesInBlock = map[string]Transaction{}
+	// get a map of all hashes and their corresponding Transactions
+	for _, tr := range trs {
+		hashesInBlock[tr.getHash()] = tr
+	}
+
+	transactionsNotInBlock := bc.Transactions[:0]
+	for _, tr := range bc.Transactions {
+		_, exists := hashesInBlock[tr.getHash()]
+		if !exists {
+			golog.Infof("Transaction does not exist, keeping it:\n %v", tr)
+			transactionsNotInBlock = append(transactionsNotInBlock, tr)
+		}
+	}
+	// Set the transactions not found in the announced block to this chain's transaction List
+	bc.Transactions = transactionsNotInBlock
 }
 
 // Hash Creates a SHA-256 hash of a Block
@@ -107,17 +149,16 @@ func (bc *Blockchain) newBlock(proof int64, previousHash string) Block {
 
 // addBlock performs a validity check on the new block, if valid it add's the block to the chain.
 // Return bool
-func (bc *Blockchain) addBlock(bl Block) bool {
+func (bc *Blockchain) addBlock(bl Block) (Block, error) {
 
 	lastBlock := bc.Chain[len(bc.Chain)-1]
 
 	if bc.validProof(lastBlock.Proof, bl.Proof) {
 		golog.Info("Added a new block due to an announcement.")
 		bc.Chain = append(bc.Chain, bl)
-		return true
+		return bl, nil
 	}
-	golog.Warning("Could not add the newly announced block.")
-	return false
+	return bl, errors.New("Could not add the newly announced block.")
 }
 
 // analyseInvalidBlock
@@ -128,6 +169,7 @@ func (bc *Blockchain) analyseInvalidBlock(bl Block, sender string) bool {
 	lastBlock := bc.Chain[len(bc.Chain)-1]
 
 	golog.Info("----------------------------------")
+	defer golog.Info("----------------------------------")
 	golog.Infof("Analysing block: index: %d", bl.Index)
 	golog.Infof("%v", bl)
 	golog.Infof("Last block: index: %d", lastBlock.Index)
@@ -145,21 +187,18 @@ func (bc *Blockchain) analyseInvalidBlock(bl Block, sender string) bool {
 			resp, err := http.Get(url)
 			if err != nil {
 				golog.Warningf("Request error: %s", err)
-				golog.Info("----------------------------------")
 				return false
 			}
 
 			decodingErr := json.NewDecoder(resp.Body).Decode(&nextBlock)
 			if decodingErr != nil {
 				golog.Warningf("Decoding error: %s", err)
-				golog.Info("----------------------------------")
 				return false
 			}
 
-			success := bc.addBlock(nextBlock)
-			if success == false {
-				golog.Warningf("Could not add block %d from %s", lastBlock.Index+i, sender)
-				golog.Info("----------------------------------")
+			_, err = bc.addBlock(nextBlock)
+			if err != nil {
+				golog.Warningf("Could not add block %d from %s: %s", lastBlock.Index+i, sender, err.Error())
 				return false
 			}
 			defer resp.Body.Close()
@@ -172,11 +211,9 @@ func (bc *Blockchain) analyseInvalidBlock(bl Block, sender string) bool {
 	} else {
 		// something else went wrong.
 		golog.Warning("Unable to analyse")
-		golog.Info("----------------------------------")
 		return false
 	}
 
-	golog.Info("----------------------------------")
 	return true
 }
 
@@ -241,15 +278,19 @@ func (bc *Blockchain) validate() bool {
 
 // mine Mines a block and puts all transactions in the block
 // An incentive is paid to the miner and the list of transactions is cleared
-func (bc *Blockchain) mine() Block {
+func (bc *Blockchain) mine() (Block, error) {
+	var block Block
 	lastBlock := bc.lastBlock()
 	lastProof := lastBlock.Proof
 
 	proof := bc.proofOfWork(lastProof)
-	tr := Transaction{zerohash, me.Hash, 1}
-	bc.newTransaction(tr)
-	block := bc.newBlock(proof, "")
-	return block
+	transaction := Transaction{zerohash, me.Hash, 1, time.Now().UnixNano()}
+	_, err := bc.newTransaction(transaction)
+	if err != nil {
+		return block, err
+	}
+	block = bc.newBlock(proof, "")
+	return block, nil
 }
 
 // resolve is the Consensus Algorithm, it resolves conflicts
@@ -262,7 +303,7 @@ func (bc *Blockchain) resolve() bool {
 		if cl == me {
 			continue
 		}
-		url := fmt.Sprintf("%s%s:%d/chain", cl.Protocol, cl.Hostname, cl.Port)
+		url := fmt.Sprintf("%s/chain", cls.getAddress(cl))
 		resp, err := http.Get(url)
 		if err != nil {
 			golog.Warningf("Chain request error: %s", err)

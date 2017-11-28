@@ -95,7 +95,7 @@ func (cls *Clients) greetClients() bool {
 // greet makes a call to a client cl to make this node known within the network.
 func greet(cl Client) {
 	// POST to /client
-	url := fmt.Sprintf("%s%s:%d/client", cl.Protocol, cl.Hostname, cl.Port)
+	url := fmt.Sprintf("%s/client", cls.getAddress(cl))
 	payload, err := json.Marshal(me)
 	if err != nil {
 		golog.Warning("Could not marshall client: Me")
@@ -123,41 +123,22 @@ func greet(cl Client) {
 func (cls *Clients) announceMinedBlocks(bl Block) {
 	for _, cl := range cls.List {
 		if cl == me {
-			// no need to brag
-			continue
+			continue // no need to brag
 		}
 		go announceMinedBlock(cl, bl)
 	}
 }
 
-// announceMinedBlock shares the block with other clients. It is done in a goroutine.
-// Other clients should check the validity of the new block on their chain and add it.
-func announceMinedBlock(cl Client, bl Block) {
-	url := fmt.Sprintf("%s%s:%d/mined", cl.Protocol, cl.Hostname, cl.Port)
-
-	blockAndSender := map[string]interface{}{"block": bl, "sender": cls.getAddress(me)}
-	payload, err := json.Marshal(blockAndSender)
-	if err != nil {
-		golog.Errorf("Could not marshall block or client. Msg: %s", err)
-		golog.Errorf("Block: %v", bl)
-		golog.Errorf("Client: %v", me)
+// distributeTransaction tells all clients in the network about the new Transaction.
+func (cls *Clients) distributeTransaction(tr Transaction) {
+	golog.Infof("Announcing transaction to %d clients", len(cls.List))
+	for _, cl := range cls.List {
+		if cl == me {
+			continue // no need to brag
+		}
+		golog.Info("Announcing transaction")
+		go announceTransaction(cl, tr)
 	}
-
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payload))
-	if err != nil {
-		golog.Warningf("Request setup error: %s", err)
-		panic(err)
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		golog.Warningf("POST request error: %s", err)
-		// I don't want to panic here, but it might be a good idea to
-		// remove the client from the list
-	}
-	defer resp.Body.Close()
 }
 
 // num returns an int which represents the number of connected clients.

@@ -77,6 +77,7 @@ func (a *App) initializeRoutes() {
 	a.Router.HandleFunc("/", a.index).Methods("GET")
 	// transactions
 	a.Router.HandleFunc("/transaction", a.newTransaction).Methods("POST")
+	a.Router.HandleFunc("/transaction/distributed", a.distributedTransaction).Methods("POST")
 	a.Router.HandleFunc("/transactions/{hash}", a.transactions).Methods("GET")
 	// wallet
 	a.Router.HandleFunc("/wallet/{hash}", a.wallet).Methods("GET")
@@ -84,7 +85,7 @@ func (a *App) initializeRoutes() {
 	a.Router.HandleFunc("/block", a.lastblock).Methods("GET")
 	a.Router.HandleFunc("/block/{hash}", a.block).Methods("GET")
 	a.Router.HandleFunc("/block/index/{index}", a.blockByIndex).Methods("GET")
-	a.Router.HandleFunc("/mined", a.minedBlock).Methods("POST")
+	a.Router.HandleFunc("/block/distributed", a.distributedBlock).Methods("POST")
 	// mining and chaining
 	a.Router.HandleFunc("/mine", a.mine).Methods("GET")
 	a.Router.HandleFunc("/chain", a.chain).Methods("GET")
@@ -137,37 +138,70 @@ func (a *App) transactions(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, resp)
 }
 
+// distributedTransaction receives a transaction from another client in the network.
+// It is used to distribute the _unmined_ transactions throughout the network
+func (a *App) distributedTransaction(w http.ResponseWriter, r *http.Request) {
+	defer golog.Flush()
+	golog.Infof("starting distributedTransaction on Client: %s", cls.getAddress(me))
+
+	type Payload struct {
+		Transaction Transaction `json:"transaction"`
+		Sender      string      `json:"sender"`
+	}
+
+	var payload Payload
+	err := json.NewDecoder(r.Body).Decode(&payload)
+
+	if err != nil {
+		golog.Warningf("Invalid Transaction (Unable to decode) on Client: %s", cls.getAddress(me))
+		respondWithError(w, http.StatusUnprocessableEntity, "Invalid Transaction (Unable to decode)")
+	} else {
+		golog.Infof("payload: %v", payload)
+		if bc.isNonExistingTransaction(payload.Transaction) {
+			golog.Infof("transaction: %v", payload.Transaction)
+			_, err = bc.newTransaction(payload.Transaction)
+			if err != nil {
+				golog.Warningf("%s on Client: %s", err.Error(), cls.getAddress(me))
+				respondWithError(w, http.StatusUnprocessableEntity, err.Error())
+			} else {
+				golog.Infof("Transaction added on Client: %s", cls.getAddress(me))
+				respondWithJSON(w, http.StatusOK, "Transaction added")
+			}
+		} else {
+			golog.Warningf("Invalid Transaction (Already exists) on Client: %s", cls.getAddress(me))
+			respondWithError(w, http.StatusUnprocessableEntity, "Invalid Transaction (Already exists)")
+		}
+
+	}
+}
+
 // newTransaction adds a transaction, which consists of:
 // Sender string
 // Recipient string
 // Amount float32
 func (a *App) newTransaction(w http.ResponseWriter, r *http.Request) {
 	var tr Transaction
-	success := false
 
 	err := json.NewDecoder(r.Body).Decode(&tr)
 	if err != nil {
-		success = false
 		respondWithError(w, http.StatusUnprocessableEntity, "Invalid Transaction (Unable to decode)")
 	} else {
-		success, err = checkTransaction(tr)
+		addedTransaction, err := bc.newTransaction(tr)
 		if err != nil {
 			respondWithError(w, http.StatusUnprocessableEntity, err.Error())
+		} else {
+			// all OK. Add the transaction and distribute it.
+			cls.distributeTransaction(addedTransaction) // distribution
+			respondWithJSON(w, http.StatusOK, "Transaction added")
 		}
-	}
-
-	if success {
-		// all OK. Add the transaction and serve a success
-		bc.newTransaction(tr)
-		respondWithJSON(w, http.StatusOK, "Transaction added")
 	}
 }
 
-// minedBlock is a receiver for blocks mined by other clients.
+// distributedBlock is a receiver for blocks mined by other clients.
 // It catches the newly mined block and checks for validity on his own chain
 // If it is valid the block is added and a statusOk is returned.
 // Otherwise it gives an error
-func (a *App) minedBlock(w http.ResponseWriter, r *http.Request) {
+func (a *App) distributedBlock(w http.ResponseWriter, r *http.Request) {
 	// fetching the block that came with the request
 	decoder := json.NewDecoder(r.Body)
 
@@ -183,9 +217,13 @@ func (a *App) minedBlock(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusBadRequest, "invalid json")
 		panic(err)
 	}
-	success := bc.addBlock(payload.NewBlock)
+	block, err := bc.addBlock(payload.NewBlock)
 
-	if success {
+	if err == nil {
+		// @todo, check block's transactions with the current transactions.
+
+		bc.clearTransactions(block.Transactions)
+
 		resp := map[string]interface{}{
 			"success": true,
 			"message": "New block added",
@@ -312,14 +350,18 @@ func (a *App) validate(w http.ResponseWriter, r *http.Request) {
 // mine Mines a block and puts all transactions in the block
 // An incentive is paid to the miner and the list of transactions is cleared
 func (a *App) mine(w http.ResponseWriter, r *http.Request) {
-	block := bc.mine()
-	resp := map[string]interface{}{
-		"message":      "New block mined.",
-		"Block":        block,
-		"length":       len(bc.Chain),
-		"transactions": len(block.Transactions),
+	block, err := bc.mine()
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, err.Error())
+	} else {
+		resp := map[string]interface{}{
+			"message":      "New block mined.",
+			"Block":        block,
+			"length":       len(bc.Chain),
+			"transactions": len(block.Transactions),
+		}
+		respondWithJSON(w, http.StatusOK, resp)
 	}
-	respondWithJSON(w, http.StatusOK, resp)
 }
 
 // GetConfig test of the config needs to be loaded and returns the Config file.
