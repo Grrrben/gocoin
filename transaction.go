@@ -64,7 +64,7 @@ func checkTransaction(tr Transaction) (success bool, err error) {
 		return false, errors.New("invalid transaction (sender invalid)")
 	} else if !validHash(tr.Recipient) {
 		return false, errors.New("invalid transaction (recipient invalid)")
-	} else if getWalletCredits(tr.Sender) < tr.Amount {
+	} else if tr.Sender != zerohash && getWalletCredits(tr.Sender) < tr.Amount {
 		return false, errors.New("invalid transaction (insufficient credit)")
 	}
 	return true, nil
@@ -76,7 +76,7 @@ func announceTransaction(cl Client, tr Transaction) {
 	url := fmt.Sprintf("%s/transaction/distributed", cls.getAddress(cl))
 
 	transactionAndSender := map[string]interface{}{"transaction": tr, "sender": cls.getAddress(me)}
-	golog.Infof("transactionAndSender to be distributed:\n %s", transactionAndSender)
+	golog.Infof("transactionAndSender to be distributed:\n %v", transactionAndSender)
 	payload, err := json.Marshal(transactionAndSender)
 	if err != nil {
 		golog.Errorf("Could not marshall transaction or client. Msg: %s", err)

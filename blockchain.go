@@ -51,23 +51,25 @@ func (bc *Blockchain) isNonExistingTransaction(newTr Transaction) bool {
 	return true
 }
 
+// clearTransactions loops all transactions in this client and filters out all transactions that are
+// persisted in the mined block
 func (bc *Blockchain) clearTransactions(trs []Transaction) {
 	var hashesInBlock = map[string]Transaction{}
-	//[]string{}
-	//hashesInBlock := []string{}
-	// get a list of all hashes
+	// get a map of all hashes and their corresponding Transactions
 	for _, tr := range trs {
 		hashesInBlock[tr.getHash()] = tr
 	}
 
-	for i, tr := range bc.Transactions {
-		// To test for a key without retrieving the value, use an underscore in place of the first value.
-		// The second value (exists) is a bool that is true if the key exists in the map, and false if not.
+	transactionsNotInBlock := bc.Transactions[:0]
+	for _, tr := range bc.Transactions {
 		_, exists := hashesInBlock[tr.getHash()]
-		if exists {
-			bc.Transactions = append(bc.Transactions[:i], bc.Transactions[i+1:]...)
+		if !exists {
+			golog.Infof("Transaction does not exist, keeping it:\n %v", tr)
+			transactionsNotInBlock = append(transactionsNotInBlock, tr)
 		}
 	}
+	// Set the transactions not found in the announced block to this chain's transaction List
+	bc.Transactions = transactionsNotInBlock
 }
 
 // Hash Creates a SHA-256 hash of a Block
