@@ -30,7 +30,6 @@ func (tr Transaction) getHash() string {
 	hasher := md5.New()
 	hasher.Write([]byte(str))
 	return hex.EncodeToString(hasher.Sum(nil))
-
 }
 
 // checkHashesEqual checks if the hashes of 2 objects are the same
