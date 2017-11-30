@@ -1,11 +1,11 @@
 package main
 
 import (
-	"fmt"
+	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/grrrben/golog"
 	"net/http"
-	"bytes"
 )
 
 type Block struct {

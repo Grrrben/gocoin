@@ -58,6 +58,7 @@ func (a *App) Initialize() {
 	cls.greetClients()
 
 	bc = initBlockchain()
+	bc.getCurrentTransactions()
 	golog.Info("Starting with a base blockchain:")
 	golog.Infof("Blockchain:\n %v\n", bc)
 	golog.Flush()
@@ -79,6 +80,7 @@ func (a *App) initializeRoutes() {
 	a.Router.HandleFunc("/transaction", a.newTransaction).Methods("POST")
 	a.Router.HandleFunc("/transaction/distributed", a.distributedTransaction).Methods("POST")
 	a.Router.HandleFunc("/transactions/{hash}", a.transactions).Methods("GET")
+	a.Router.HandleFunc("/transactions", a.currentTransactions).Methods("GET")
 	// wallet
 	a.Router.HandleFunc("/wallet/{hash}", a.wallet).Methods("GET")
 	// blocks
@@ -135,6 +137,15 @@ func (a *App) transactions(w http.ResponseWriter, r *http.Request) {
 		"transactions": transactions,
 	}
 
+	respondWithJSON(w, http.StatusOK, resp)
+}
+
+// currentTransactions shows all transactions that are not in a block yet
+func (a *App) currentTransactions(w http.ResponseWriter, r *http.Request) {
+	resp := map[string]interface{}{
+		"success":      true,
+		"transactions": bc.Transactions,
+	}
 	respondWithJSON(w, http.StatusOK, resp)
 }
 

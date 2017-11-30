@@ -5,11 +5,11 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/grrrben/golog"
 	"net/http"
 	"time"
-	"errors"
 )
 
 // how many zero's do we want in the hash
@@ -219,6 +219,7 @@ func (bc *Blockchain) analyseInvalidBlock(bl Block, sender string) bool {
 
 // initBlockchain initialises the blockchain
 // Returns a pointer to the blockchain object that the app can alter later on
+// If there already is a network, the chain is fetched from the network, otherwise a genesis block is created.
 func initBlockchain() *Blockchain {
 	// init the blockchain
 	newBlockchain := &Blockchain{
@@ -237,6 +238,47 @@ func initBlockchain() *Blockchain {
 	}
 
 	return newBlockchain // pointer
+}
+
+// getCurrentTransactions get's the transactions from other clients.
+// it is used at the startup
+func (bc *Blockchain) getCurrentTransactions() bool {
+	if len(cls.List) > 1 {
+		myAddress := cls.getAddress(me)
+		for _, client := range cls.List {
+			url := fmt.Sprintf("%s/transactions", cls.getAddress(client))
+
+			if myAddress == cls.getAddress(client) {
+				// it is I, skip it
+				continue
+			}
+			resp, err := http.Get(url)
+			if err != nil {
+				golog.Warningf("Transactions request error: %s", err)
+				continue // next
+			}
+
+			type Payload struct {
+				Success      bool          `json:"success"`
+				Transactions []Transaction `json:"transactions"`
+			}
+			var payload Payload
+
+			decodingErr := json.NewDecoder(resp.Body).Decode(&payload)
+			defer resp.Body.Close()
+
+			if decodingErr != nil {
+				golog.Warningf("Could not decode JSON of external transactions: %s", err)
+				continue
+			}
+			golog.Infof("Found %d transactions on another node.", len(payload.Transactions))
+			bc.Transactions = payload.Transactions
+			return true
+		}
+		golog.Warning("No transactions found on other clients")
+	}
+	golog.Info("First client. No transactions added")
+	return false
 }
 
 // validate. Determines if a given blockchain is valid.
