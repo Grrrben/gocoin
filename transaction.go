@@ -1,16 +1,16 @@
 package main
 
 import (
+	"bytes"
 	"crypto/md5"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
-	"regexp"
-	"encoding/json"
 	"github.com/grrrben/golog"
+	"log"
 	"net/http"
-	"bytes"
+	"regexp"
 )
 
 type Transaction struct {
