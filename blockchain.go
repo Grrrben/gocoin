@@ -258,21 +258,17 @@ func (bc *Blockchain) getCurrentTransactions() bool {
 				continue // next
 			}
 
-			type Payload struct {
-				Success      bool          `json:"success"`
-				Transactions []Transaction `json:"transactions"`
-			}
-			var payload Payload
+			var transactions []Transaction
 
-			decodingErr := json.NewDecoder(resp.Body).Decode(&payload)
+			decodingErr := json.NewDecoder(resp.Body).Decode(&transactions)
 			defer resp.Body.Close()
 
 			if decodingErr != nil {
 				golog.Warningf("Could not decode JSON of external transactions: %s", err)
 				continue
 			}
-			golog.Infof("Found %d transactions on another node.", len(payload.Transactions))
-			bc.Transactions = payload.Transactions
+			golog.Infof("Found %d transactions on another node.", len(transactions))
+			bc.Transactions = transactions
 			return true
 		}
 		golog.Warning("No transactions found on other clients")
@@ -326,7 +322,13 @@ func (bc *Blockchain) mine() (Block, error) {
 	lastProof := lastBlock.Proof
 
 	proof := bc.proofOfWork(lastProof)
-	transaction := Transaction{zerohash, me.Hash, 1, time.Now().UnixNano()}
+	transaction := Transaction{
+		zerohash,
+		me.Hash,
+		1,
+		fmt.Sprintf("Mined by %s", cls.getAddress(me)),
+		time.Now().UnixNano(),
+	}
 	_, err := bc.newTransaction(transaction)
 	if err != nil {
 		return block, err

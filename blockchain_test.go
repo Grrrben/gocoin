@@ -44,6 +44,7 @@ func TestNewTransaction(t *testing.T) {
 		"sender",
 		"receiver",
 		1,
+		"",
 		time.Now().UnixNano(),
 	}
 

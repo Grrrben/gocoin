@@ -30,6 +30,7 @@ Add a new transaction:
 {
  "sender": "fad5e7a92f1c43b1523614336a07f98b894bb80fee06b6763b50ab03b597d5f4",
  "recipient": "fad5e7a92f1c43b1523614336a07f98b894bb80fee06b6763b50ab03b597d5f4",
+ "message": "An optional message",
  "amount": 5
 }
 ```
@@ -46,6 +47,11 @@ If the transaction is added the client will distribute the transaction throughou
 [GET] `http://localhost:8000/transactions/{hash}`
 
 Shows all transactions of a wallet with hash {hash}.
+
+[GET] `http://localhost:8000/transactions`
+
+Servers an array of transaction objects.  
+Shows all transactions that are not added to the blockchain yet.
 
 [POST] `http://localhost:8000/transaction/distributed`
 
