@@ -17,6 +17,7 @@ type Transaction struct {
 	Sender    string
 	Recipient string
 	Amount    float32
+	Message   string
 	Time      int64
 }
 

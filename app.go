@@ -132,21 +132,12 @@ func (a *App) transactions(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	resp := map[string]interface{}{
-		"success":      true,
-		"transactions": transactions,
-	}
-
-	respondWithJSON(w, http.StatusOK, resp)
+	respondWithJSON(w, http.StatusOK, transactions)
 }
 
 // currentTransactions shows all transactions that are not in a block yet
 func (a *App) currentTransactions(w http.ResponseWriter, r *http.Request) {
-	resp := map[string]interface{}{
-		"success":      true,
-		"transactions": bc.Transactions,
-	}
-	respondWithJSON(w, http.StatusOK, resp)
+	respondWithJSON(w, http.StatusOK, bc.Transactions)
 }
 
 // distributedTransaction receives a transaction from another client in the network.
