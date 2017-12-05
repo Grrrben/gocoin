@@ -9,11 +9,11 @@ import (
 )
 
 type Block struct {
-	Index        int64
-	Timestamp    int64
-	Transactions []Transaction
-	Proof        int64
-	PreviousHash string
+	Index        int64         `json:"index"`
+	Timestamp    int64         `json:"timestamp"`
+	Transactions []Transaction `json:"transactions"`
+	Proof        int64         `json:"proof"`
+	PreviousHash string        `json:"previousHash"`
 }
 
 // announceMinedBlock shares the block with other clients. It is done in a goroutine.

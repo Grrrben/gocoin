@@ -14,11 +14,11 @@ import (
 )
 
 type Transaction struct {
-	Sender    string
-	Recipient string
-	Amount    float32
-	Message   string
-	Time      int64
+	Sender    string  `json:"sender"`
+	Recipient string  `json:"recipient"`
+	Amount    float32 `json:"amount"`
+	Message   string  `json:"message"`
+	Time      int64   `json:"time"`
 }
 
 type hashable interface {

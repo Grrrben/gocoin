@@ -12,11 +12,11 @@ import (
 var me Client
 
 type Client struct {
-	Hostname string
-	Protocol string
-	Port     uint16
-	Name     string
-	Hash     string
+	Hostname string `json:"hostname"`
+	Protocol string `json:"protocol"`
+	Port     uint16 `json:"port"`
+	Name     string `json:"name"`
+	Hash     string `json:"hash"`
 }
 
 type Clients struct {
