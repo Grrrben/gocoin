@@ -19,9 +19,9 @@ type Block struct {
 // announceMinedBlock shares the block with other clients. It is done in a goroutine.
 // Other clients should check the validity of the new block on their chain and add it.
 func announceMinedBlock(cl Client, bl Block) {
-	url := fmt.Sprintf("%s/block/distributed", cls.getAddress(cl))
+	url := fmt.Sprintf("%s/block/distributed", cl.getAddress())
 
-	blockAndSender := map[string]interface{}{"block": bl, "sender": cls.getAddress(me)}
+	blockAndSender := map[string]interface{}{"block": bl, "sender": me.getAddress()}
 	payload, err := json.Marshal(blockAndSender)
 	if err != nil {
 		golog.Errorf("Could not marshall block or client. Msg: %s", err)

@@ -73,9 +73,9 @@ func checkTransaction(tr Transaction) (success bool, err error) {
 // announceTransaction distributes new transaction in the network
 // It is preferably done in a goroutine.
 func announceTransaction(cl Client, tr Transaction) {
-	url := fmt.Sprintf("%s/transaction/distributed", cls.getAddress(cl))
+	url := fmt.Sprintf("%s/transaction/distributed", cl.getAddress())
 
-	transactionAndSender := map[string]interface{}{"transaction": tr, "sender": cls.getAddress(me)}
+	transactionAndSender := map[string]interface{}{"transaction": tr, "sender": me.getAddress()}
 	golog.Infof("transactionAndSender to be distributed:\n %v", transactionAndSender)
 	payload, err := json.Marshal(transactionAndSender)
 	if err != nil {

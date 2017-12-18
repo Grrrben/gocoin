@@ -1,8 +1,8 @@
 package main
 
 import (
-	"testing"
 	"regexp"
+	"testing"
 )
 
 func TestCreateWallet(t *testing.T) {

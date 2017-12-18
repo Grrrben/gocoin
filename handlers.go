@@ -54,7 +54,7 @@ func (a *App) currentTransactions(w http.ResponseWriter, r *http.Request) {
 // It is used to distribute the _unmined_ transactions throughout the network
 func (a *App) distributedTransaction(w http.ResponseWriter, r *http.Request) {
 	defer golog.Flush()
-	golog.Infof("starting distributedTransaction on Client: %s", cls.getAddress(me))
+	golog.Infof("starting distributedTransaction on Client: %s", me.getAddress())
 
 	type Payload struct {
 		Transaction Transaction `json:"transaction"`
@@ -65,7 +65,7 @@ func (a *App) distributedTransaction(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&payload)
 
 	if err != nil {
-		golog.Warningf("Invalid Transaction (Unable to decode) on Client: %s", cls.getAddress(me))
+		golog.Warningf("Invalid Transaction (Unable to decode) on Client: %s", me.getAddress())
 		respondWithError(w, http.StatusUnprocessableEntity, "Invalid Transaction (Unable to decode)")
 	} else {
 		golog.Infof("payload: %v", payload)
@@ -73,14 +73,14 @@ func (a *App) distributedTransaction(w http.ResponseWriter, r *http.Request) {
 			golog.Infof("transaction: %v", payload.Transaction)
 			_, err = bc.newTransaction(payload.Transaction)
 			if err != nil {
-				golog.Warningf("%s on Client: %s", err.Error(), cls.getAddress(me))
+				golog.Warningf("%s on Client: %s", err.Error(), me.getAddress())
 				respondWithError(w, http.StatusUnprocessableEntity, err.Error())
 			} else {
-				golog.Infof("Transaction added on Client: %s", cls.getAddress(me))
+				golog.Infof("Transaction added on Client: %s", me.getAddress())
 				respondWithJSON(w, http.StatusOK, "Transaction added")
 			}
 		} else {
-			golog.Warningf("Invalid Transaction (Already exists) on Client: %s", cls.getAddress(me))
+			golog.Warningf("Invalid Transaction (Already exists) on Client: %s", me.getAddress())
 			respondWithError(w, http.StatusUnprocessableEntity, "Invalid Transaction (Already exists)")
 		}
 
@@ -238,9 +238,13 @@ func (a *App) connectClient(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	// register the client
-	cls.addClient(newCl)
-	resp := map[string]interface{}{"Client": newCl, "total": cls.num()}
-	respondWithJSON(w, http.StatusOK, resp)
+	added := cls.addClient(newCl)
+	if added {
+		resp := map[string]interface{}{"Client": newCl, "total": cls.num()}
+		respondWithJSON(w, http.StatusOK, resp)
+	} else {
+		respondWithError(w, http.StatusConflict, "Client could not be added")
+	}
 }
 
 // getClients response is the list of Clients

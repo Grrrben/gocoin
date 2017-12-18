@@ -244,11 +244,10 @@ func initBlockchain() *Blockchain {
 // it is used at the startup
 func (bc *Blockchain) getCurrentTransactions() bool {
 	if len(cls.List) > 1 {
-		myAddress := cls.getAddress(me)
 		for _, client := range cls.List {
-			url := fmt.Sprintf("%s/transactions", cls.getAddress(client))
+			url := fmt.Sprintf("%s/transactions", client.getAddress())
 
-			if myAddress == cls.getAddress(client) {
+			if me.getAddress() == client.getAddress() {
 				// it is I, skip it
 				continue
 			}
@@ -326,7 +325,7 @@ func (bc *Blockchain) mine() (Block, error) {
 		zerohash,
 		me.Hash,
 		1,
-		fmt.Sprintf("Mined by %s", cls.getAddress(me)),
+		fmt.Sprintf("Mined by %s", me.getAddress()),
 		time.Now().UnixNano(),
 	}
 	_, err := bc.newTransaction(transaction)
@@ -347,7 +346,7 @@ func (bc *Blockchain) resolve() bool {
 		if cl == me {
 			continue
 		}
-		url := fmt.Sprintf("%s/chain", cls.getAddress(cl))
+		url := fmt.Sprintf("%s/chain", cl.getAddress())
 		resp, err := http.Get(url)
 		if err != nil {
 			golog.Warningf("Chain request error: %s", err)

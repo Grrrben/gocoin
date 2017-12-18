@@ -115,7 +115,7 @@ Response identical to `/block`.
 A receiver for blocks mined by other clients.  
 Should contain a (Block) block and a (string) sender. The method is called automatically by other clients when they mined a block.  
 
-Gives a 200 on success or a 409 if a conflict arrises.  
+Gives a 200 on success or a 409 if a conflict arises.
 
 
 ### Chain
@@ -238,6 +238,11 @@ The POSTed data should be consistent with a Client.
  "name": "This is me" // string
 }
 ```
+
+If successful, the client is added and the response will consist of the client and a total of clients in the network.
+`{"Client":{"hostname":"localhost","protocol":"http://","port":8003,"name":"Name of the client","hash":"f1c13a0c8292fa5c9dfe565a19f79c2993619e9b6c5da0669b5c886043224673"},"total":3}`
+
+The HTTP code is a 200 on success or a 409 if a conflict with curretn listed clients arises.
 
 ## TODO
 
