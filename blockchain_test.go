@@ -51,7 +51,7 @@ func TestNewTransaction(t *testing.T) {
 	_, e := bc.newTransaction(transaction)
 
 	if e == nil {
-		t.Errorf("Expected an error when adding an invalid transaction")
+		t.Error("Expected an error when adding an invalid transaction")
 	}
 }
 

@@ -1,4 +1,5 @@
 .idea/
 blockchain
-log/
+log/*
+!log/.gitkeep
 
