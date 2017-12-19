@@ -10,6 +10,7 @@ import (
 	"github.com/grrrben/golog"
 	"net/http"
 	"time"
+	"sync"
 )
 
 // how many zero's do we want in the hash
@@ -243,6 +244,7 @@ func initBlockchain() *Blockchain {
 // getCurrentTransactions get's the transactions from other clients.
 // it is used at the startup
 func (bc *Blockchain) getCurrentTransactions() bool {
+	defer golog.Flush()
 	if len(cls.List) > 1 {
 		for _, client := range cls.List {
 			url := fmt.Sprintf("%s/transactions", client.getAddress())
@@ -279,7 +281,7 @@ func (bc *Blockchain) getCurrentTransactions() bool {
 // validate. Determines if a given blockchain is valid.
 // Returns bool, true if valid
 func (bc *Blockchain) validate() bool {
-
+	defer golog.Flush()
 	chainLength := len(bc.Chain)
 
 	if chainLength == 1 {
@@ -342,7 +344,13 @@ func (bc *Blockchain) mine() (Block, error) {
 func (bc *Blockchain) resolve() bool {
 	golog.Infof("Resolving conflicts (clients %d):", len(cls.List))
 	replaced := false
-	for _, cl := range cls.List {
+
+	// first, let's grep some of the lengths of the different client chains.
+	clients := bc.chainLengthPerClient()
+
+	for _, pair := range clients {
+
+		cl := pair.Key
 		if cl == me {
 			continue
 		}
@@ -366,6 +374,7 @@ func (bc *Blockchain) resolve() bool {
 
 		if len(extChain.Chain) > len(bc.Chain) {
 			golog.Infof("Blockchain replaced. Found length of %d instead of current %d.", len(extChain.Chain), len(bc.Chain))
+			fmt.Printf("Synced with %s\n", cl.getAddress())
 			// it might be better to fetch a list of all client's chain length first, then replace ours
 			// with the largest one.
 			bc.Chain = extChain.Chain
@@ -373,4 +382,89 @@ func (bc *Blockchain) resolve() bool {
 		}
 	}
 	return replaced
+}
+
+type StatusReport struct {
+	Length int `json:"length"`
+}
+
+type ClientLength struct {
+	client Client
+	length int
+}
+
+// chainLengthPerClient get a map of clients with their respective chain length
+func (bc *Blockchain) chainLengthPerClient() PairList {
+	// a map of Clients with their chain length
+	clientLength := make(map[Client]int)
+	// a channel with the cl vs length struct
+	clientChannel := make(chan ClientLength, 10)
+	// in case something goes wrong, show a couple of errors
+	errChannel := make(chan error, 4)
+
+	var wg sync.WaitGroup
+
+	for i, cl := range cls.List {
+		if cl == me {
+			continue
+		}
+		wg.Add(1)
+
+		go chainLengthOfClient(cl, &wg, clientChannel, errChannel)
+
+		if i > 10 {
+			break // max 10, but sooner if less clients are connected
+		}
+	}
+
+	// wait for the sync.WaitGroup to be completed
+	wg.Wait()
+	close(clientChannel)
+	close(errChannel)
+
+	for receiver := range clientChannel {
+		golog.Infof("received: %v", receiver)
+		clientLength[receiver.client] = receiver.length
+	}
+
+	for err := range errChannel {
+		golog.Warningf("Error in fetching list of client statusses", err.Error())
+	}
+
+	golog.Infof("Length of clients:\n%v\n", len(clientLength))
+	// watch it; When iterating over a map with a range loop, the iteration order is not specified and is not
+	// guaranteed to be the same from one iteration to the next. Thus, sort it first.
+	return sortMap(clientLength)
+}
+
+// chainLengthOfClient Goroutine. Helper function that collects information from nodes and puts it in the channel
+func chainLengthOfClient(cl Client, wg *sync.WaitGroup, channel chan ClientLength, errorChannel chan error) {
+	var report StatusReport
+	defer wg.Done()
+
+	url := fmt.Sprintf("%s/status", cl.getAddress())
+	resp, err := http.Get(url)
+	if err != nil {
+		select {
+		case errorChannel <- err:
+			// first X errors to this channel
+		default:
+			// ok
+		}
+	}
+
+	decodingErr := json.NewDecoder(resp.Body).Decode(&report)
+	defer resp.Body.Close()
+
+	if decodingErr != nil {
+		select {
+		case errorChannel <- decodingErr:
+			// first X errors to this channel
+		default:
+			// ok
+		}
+	}
+
+	clen := ClientLength{cl, report.Length}
+	channel <- clen
 }
