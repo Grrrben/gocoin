@@ -274,11 +274,11 @@ func (bc *Blockchain) getCurrentTransactions() bool {
 
 			decodingErr := json.NewDecoder(resp.Body).Decode(&transactions)
 
-
 			if decodingErr != nil {
 				golog.Warningf("Could not decode JSON of external transactions: %s", err)
 				continue
 			}
+			resp.Body.Close()
 			golog.Infof("Found %d transactions on another node.", len(transactions))
 			bc.Transactions = transactions
 			return true
