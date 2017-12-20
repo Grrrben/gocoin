@@ -41,8 +41,9 @@ func greet(cl Client) {
 		golog.Warningf("POST request error: %s", err)
 		// I don't want to panic here, but it might be a good idea to
 		// remove the client from the list
+	} else {
+		resp.Body.Close()
 	}
-	defer resp.Body.Close()
 }
 
 // createClientHash Creates a wallet and returns the hash of the new wallet.

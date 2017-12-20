@@ -273,7 +273,7 @@ func (bc *Blockchain) getCurrentTransactions() bool {
 			var transactions []Transaction
 
 			decodingErr := json.NewDecoder(resp.Body).Decode(&transactions)
-			defer resp.Body.Close()
+
 
 			if decodingErr != nil {
 				golog.Warningf("Could not decode JSON of external transactions: %s", err)
@@ -384,12 +384,28 @@ func (bc *Blockchain) resolve() bool {
 		}
 
 		if len(extChain.Chain) > len(bc.Chain) {
-			golog.Infof("Blockchain replaced. Found length of %d instead of current %d.", len(extChain.Chain), len(bc.Chain))
-			fmt.Printf("Synced with %s\n", client.getAddress())
+			// check if the chain is valid.
+			oldChain := bc.Chain
 			bc.Chain = extChain.Chain
-			replaced = true
+			valid := bc.validate()
+
+			if valid {
+				golog.Infof("Blockchain replaced. Found length of %d instead of current %d.", len(extChain.Chain), len(bc.Chain))
+				fmt.Printf("Synced with %s\n", client.getAddress())
+				replaced = true
+			} else {
+				// reset to old blockchain
+				bc.Chain = oldChain
+			}
+
 		}
 		resp.Body.Close()
+
+		if replaced {
+			// we have a new, valid, chain.
+			break
+		}
+
 	}
 	return replaced
 }
@@ -452,20 +468,22 @@ func chainLengthOfClient(cl Client, wg *sync.WaitGroup, channel chan ClientLengt
 		default:
 			// ok
 		}
-	}
+	} else {
+		// We have no error, thus we can decode the response in the repost val.
+		decodingErr := json.NewDecoder(resp.Body).Decode(&report)
 
-	decodingErr := json.NewDecoder(resp.Body).Decode(&report)
-	defer resp.Body.Close()
-
-	if decodingErr != nil {
-		select {
-		case errorChannel <- decodingErr:
-			// first X errors to this channel
-		default:
-			// ok
+		if decodingErr != nil {
+			select {
+			case errorChannel <- decodingErr:
+				// first X errors to this channel
+			default:
+				// ok
+			}
+		} else {
+			defer resp.Body.Close()
 		}
-	}
 
-	clen := ClientLength{cl, report.Length}
-	channel <- clen
+		clen := ClientLength{cl, report.Length}
+		channel <- clen
+	}
 }

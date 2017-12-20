@@ -40,8 +40,9 @@ func announceMinedBlock(cl Client, bl Block) {
 		golog.Warningf("POST request error: %s", err)
 		// I don't want to panic here, but it might be a good idea to
 		// remove the client from the list
+	} else {
+		resp.Body.Close()
 	}
-	defer resp.Body.Close()
 }
 
 // Block = {

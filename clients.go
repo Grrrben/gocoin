@@ -51,7 +51,7 @@ func (cls *Clients) syncClients() bool {
 		golog.Warningf("Could not get list of Clients on url: %s", url)
 		return false
 	}
-	defer resp.Body.Close()
+
 	decodingErr := json.NewDecoder(resp.Body).Decode(&externalCls)
 	if decodingErr != nil {
 		golog.Warningf("Could not decode JSON of list of Clients\n")
