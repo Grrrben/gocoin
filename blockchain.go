@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"github.com/grrrben/golog"
 	"net/http"
-	"time"
 	"sync"
+	"time"
 )
 
 // how many zero's do we want in the hash
@@ -22,6 +22,17 @@ const hashEndsWith string = "0000"
 type Blockchain struct {
 	Chain        []Block
 	Transactions []Transaction
+}
+
+// StatusReport is used to fetch the information regarding the blockchain from other nodes in the network.
+type StatusReport struct {
+	Length int `json:"length"`
+}
+
+// ClientLength represents the length of the blockchain of a particular client.
+type ClientLength struct {
+	client Client
+	length int
 }
 
 // newTransaction will create a Transaction to go into the next Block to be mined.
@@ -350,11 +361,12 @@ func (bc *Blockchain) resolve() bool {
 
 	for _, pair := range clients {
 
-		cl := pair.Key
-		if cl == me {
+		var client Client
+		client = pair.Key.(Client) // getting the type back as the interface{} signature didn't give hints
+		if client == me {
 			continue
 		}
-		url := fmt.Sprintf("%s/chain", cl.getAddress())
+		url := fmt.Sprintf("%s/chain", client.getAddress())
 		resp, err := http.Get(url)
 		if err != nil {
 			golog.Warningf("Chain request error: %s", err)
@@ -365,7 +377,6 @@ func (bc *Blockchain) resolve() bool {
 
 		var extChain Blockchain
 		decodingErr := json.NewDecoder(resp.Body).Decode(&extChain)
-		defer resp.Body.Close()
 
 		if decodingErr != nil {
 			golog.Warningf("Could not decode JSON of external blockchain: %s", err)
@@ -374,29 +385,21 @@ func (bc *Blockchain) resolve() bool {
 
 		if len(extChain.Chain) > len(bc.Chain) {
 			golog.Infof("Blockchain replaced. Found length of %d instead of current %d.", len(extChain.Chain), len(bc.Chain))
-			fmt.Printf("Synced with %s\n", cl.getAddress())
+			fmt.Printf("Synced with %s\n", client.getAddress())
 			// it might be better to fetch a list of all client's chain length first, then replace ours
 			// with the largest one.
 			bc.Chain = extChain.Chain
 			replaced = true
 		}
+		resp.Body.Close()
 	}
 	return replaced
 }
 
-type StatusReport struct {
-	Length int `json:"length"`
-}
-
-type ClientLength struct {
-	client Client
-	length int
-}
-
 // chainLengthPerClient get a map of clients with their respective chain length
 func (bc *Blockchain) chainLengthPerClient() PairList {
-	// a map of Clients with their chain length
-	clientLength := make(map[Client]int)
+	// a map of Clients with their chain length, the interface{} is used as a key so it is compatible with the sortMap function
+	clientLength := make(map[interface{}]int)
 	// a channel with the cl vs length struct
 	clientChannel := make(chan ClientLength, 10)
 	// in case something goes wrong, show a couple of errors
@@ -417,7 +420,7 @@ func (bc *Blockchain) chainLengthPerClient() PairList {
 		}
 	}
 
-	// wait for the sync.WaitGroup to be completed
+	// wait for the sync.WaitGroup to be completed, afterwards the channels can be closed safely
 	wg.Wait()
 	close(clientChannel)
 	close(errChannel)
