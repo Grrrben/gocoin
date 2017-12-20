@@ -386,8 +386,6 @@ func (bc *Blockchain) resolve() bool {
 		if len(extChain.Chain) > len(bc.Chain) {
 			golog.Infof("Blockchain replaced. Found length of %d instead of current %d.", len(extChain.Chain), len(bc.Chain))
 			fmt.Printf("Synced with %s\n", client.getAddress())
-			// it might be better to fetch a list of all client's chain length first, then replace ours
-			// with the largest one.
 			bc.Chain = extChain.Chain
 			replaced = true
 		}
