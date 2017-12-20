@@ -73,6 +73,7 @@ func checkTransaction(tr Transaction) (success bool, err error) {
 // announceTransaction distributes new transaction in the network
 // It is preferably done in a goroutine.
 func announceTransaction(cl Client, tr Transaction) {
+	defer golog.Flush()
 	url := fmt.Sprintf("%s/transaction/distributed", cl.getAddress())
 
 	transactionAndSender := map[string]interface{}{"transaction": tr, "sender": me.getAddress()}
@@ -95,8 +96,8 @@ func announceTransaction(cl Client, tr Transaction) {
 		golog.Warningf("POST request error: %s", err)
 		// I don't want to panic here, but it might be a good idea to
 		// remove the client from the list
+	} else {
+		defer resp.Body.Close()
+		golog.Info("Transaction distributed")
 	}
-	golog.Info("Transaction distributed")
-	golog.Flush()
-	defer resp.Body.Close()
 }
