@@ -412,7 +412,7 @@ func (bc *Blockchain) resolve() bool {
 
 // chainLengthPerClient get a map of clients with their respective chain length
 func (bc *Blockchain) chainLengthPerClient() PairList {
-	// a map of Clients with their chain length, the interface{} is used as a key so it is compatible with the sortMap function
+	// a map of Clients with their chain length, the interface{} is used as a key so it is compatible with the sortMapDescending function
 	clientLength := make(map[interface{}]int)
 	// a channel with the cl vs length struct
 	clientChannel := make(chan ClientLength, 10)
@@ -451,7 +451,7 @@ func (bc *Blockchain) chainLengthPerClient() PairList {
 	golog.Infof("Length of clients:\n%v\n", len(clientLength))
 	// watch it; When iterating over a map with a range loop, the iteration order is not specified and is not
 	// guaranteed to be the same from one iteration to the next. Thus, sort it first.
-	return sortMap(clientLength)
+	return sortMapDescending(clientLength)
 }
 
 // chainLengthOfClient Goroutine. Helper function that collects information from nodes and puts it in the channel
