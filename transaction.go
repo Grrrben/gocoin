@@ -2,8 +2,7 @@ package main
 
 import (
 	"bytes"
-	"crypto/md5"
-	"encoding/hex"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -28,9 +27,10 @@ type hashable interface {
 // getHash a unique hash for a transaction
 func (tr Transaction) getHash() string {
 	str := tr.Sender + tr.Recipient + fmt.Sprintf("%.8f", tr.Amount) + fmt.Sprintf("%d", tr.Time)
-	hasher := md5.New()
-	hasher.Write([]byte(str))
-	return hex.EncodeToString(hasher.Sum(nil))
+	sha := sha256.New()
+	sha.Write([]byte(str))
+	return fmt.Sprintf("%x", sha.Sum(nil))
+
 }
 
 // checkHashesEqual checks if the hashes of 2 objects are the same
