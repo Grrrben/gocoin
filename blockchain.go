@@ -3,7 +3,7 @@ package main
 import (
 	"bytes"
 	"crypto/sha256"
-	"encoding/binary"
+	"encoding/gob"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -88,17 +88,8 @@ func (bc *Blockchain) clearTransactions(trs []Transaction) {
 func hash(bl Block) string {
 	golog.Infof("hashing block %d\n", bl.Index)
 
-	// Data for binary.Write must be a fixed-size value or a slice of fixed-size values,
-	// or a pointer to such data.
-	// @todo Marshalling the struct to json is a workaround... But it works
-	// @todo might be able to fix it with a char(length) instead of string?
-	jsonblock, errr := json.Marshal(bl)
-	if errr != nil {
-		golog.Errorf("Error: %s", errr)
-	}
-
 	var buf bytes.Buffer
-	err := binary.Write(&buf, binary.BigEndian, jsonblock)
+	err := gob.NewEncoder(&buf).Encode(bl)
 	if err != nil {
 		golog.Errorf("Could not compute hash: %s", err)
 	}
@@ -138,9 +129,13 @@ func (bc *Blockchain) validProof(proof int64, lastProof int64) bool {
 
 // newBlock add's a new block to the chain and resets the transactions as new transactions will be added
 // to the next block
-func (bc *Blockchain) newBlock(proof int64, previousHash string) Block {
-	prevHash := previousHash
-	if previousHash == "" {
+func (bc *Blockchain) newBlock(proof int64) Block {
+
+	var prevHash string
+	if len(bc.Chain) == 0 {
+		// this is the genesis block
+		prevHash = zerohash
+	} else {
 		prevBlock := bc.Chain[len(bc.Chain)-1]
 		prevHash = hash(prevBlock)
 	}
@@ -242,7 +237,7 @@ func initBlockchain() *Blockchain {
 
 	if me.Port == 8000 {
 		// Mother node. Adding a first, Genesis, Block to the Chain
-		b := newBlockchain.newBlock(100, zerohash)
+		b := newBlockchain.newBlock(100)
 		golog.Infof("Adding Genesis Block:\n %v", b)
 	} else {
 		newBlockchain.resolve()
@@ -345,7 +340,7 @@ func (bc *Blockchain) mine() (Block, error) {
 	if err != nil {
 		return block, err
 	}
-	block = bc.newBlock(proof, "")
+	block = bc.newBlock(proof)
 	return block, nil
 }
 
@@ -426,9 +421,7 @@ func (bc *Blockchain) chainLengthPerClient() PairList {
 			continue
 		}
 		wg.Add(1)
-
 		go chainLengthOfClient(cl, &wg, clientChannel, errChannel)
-
 		if i > 10 {
 			break // max 10, but sooner if less clients are connected
 		}
