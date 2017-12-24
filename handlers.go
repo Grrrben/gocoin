@@ -93,8 +93,8 @@ func (a *App) distributedTransaction(w http.ResponseWriter, r *http.Request) {
 // Amount float32
 func (a *App) newTransaction(w http.ResponseWriter, r *http.Request) {
 	var tr Transaction
-
 	err := json.NewDecoder(r.Body).Decode(&tr)
+
 	if err != nil {
 		golog.Warningf("Invalid Transaction (%s)", err.Error())
 		respondWithError(w, http.StatusUnprocessableEntity, "Invalid Transaction (Unable to decode)")
@@ -135,10 +135,7 @@ func (a *App) distributedBlock(w http.ResponseWriter, r *http.Request) {
 	block, err := bc.addBlock(payload.NewBlock)
 
 	if err == nil {
-		// @todo, check block's transactions with the current transactions.
-
 		bc.clearTransactions(block.Transactions)
-
 		resp := map[string]interface{}{
 			"success": true,
 			"message": "New block added",

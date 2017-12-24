@@ -249,3 +249,7 @@ The HTTP code is a 200 on success or a 409 if a conflict with curretn listed cli
 + Public/Private key pairs in transactions and/or wallets for proof of ownership.
 + gRCP instead of the http API
 + write _more_ tests
+
+## Issues
+
++ Floating point accurancy issues in transactions / wallet totals.
