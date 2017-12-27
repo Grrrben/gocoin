@@ -17,8 +17,8 @@ func TestGetHash(t *testing.T) {
 
 	hash := transaction.getHash()
 
-	if hash != "0c77fd2a8a8f74f6f547144b074f5b8fec39dd686209acaec2d70587e8f28b8a" {
-		t.Errorf("transaction.getHash() test failed. Expected '0c77fd2a8a8f74f6f547144b074f5b8fec39dd686209acaec2d70587e8f28b8a', got %s", hash)
+	if hash != "5865b79f210dbdd154af2eddc2644cac87a9731eb87f295140f19c82e2bbc84f" {
+		t.Errorf("transaction.getHash() test failed. Expected '5865b79f210dbdd154af2eddc2644cac87a9731eb87f295140f19c82e2bbc84f', got %s", hash)
 	}
 }
 
