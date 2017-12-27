@@ -24,9 +24,7 @@ func TestAddClient(t *testing.T) {
 		Hostname: "127.0.0.1",
 		Port:     8000,
 		Name:     "client1",
-		Hash:     createClientHash(),
 	}
-
 	cls.addClient(testClient)
 
 	if len(cls.List) != 1 {
@@ -50,7 +48,6 @@ func TestNum (t *testing.T) {
 		Hostname: "127.0.0.1",
 		Port:     8001,
 		Name:     "client2",
-		Hash:     createClientHash(),
 	}
 
 	cls.addClient(secondClient)

@@ -18,8 +18,8 @@ func init() {
 		Hostname: "127.0.0.1",
 		Port:     8000,
 		Name:     "client1",
-		Hash:     createClientHash(),
 	}
+	me.createWallet()
 	cls.addClient(me)
 }
 
