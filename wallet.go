@@ -55,6 +55,6 @@ func getWalletCredits(hash string) float64 {
 		}
 	}
 
-	f64, _ := sum.Float64()
-	return f64
+	credits, _ := sum.Float64()
+	return credits
 }
