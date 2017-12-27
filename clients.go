@@ -41,7 +41,7 @@ func (cls *Clients) syncClients() bool {
 	if me.Port == 8000 {
 		return true
 	}
-	// for now, just use a main parent node
+	// for now, just use the main parent node as an oracle.
 	url := "http://localhost:8000/client"
 
 	var externalCls Clients
