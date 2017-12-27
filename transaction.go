@@ -15,7 +15,7 @@ import (
 type Transaction struct {
 	Sender    string  `json:"sender"`
 	Recipient string  `json:"recipient"`
-	Amount    float32 `json:"amount"`
+	Amount    float64 `json:"amount"`
 	Message   string  `json:"message"`
 	Time      int64   `json:"time"`
 }

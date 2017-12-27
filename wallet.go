@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"github.com/grrrben/golog"
+	"math/big"
 	"time"
 )
 
@@ -32,26 +33,28 @@ func createWallet() wallet {
 // getWalletCredits Loops all blocks/transactions and checks for the credits that are send or received.
 // Also loops the current pending transactions that are not mined yet. Of _this_ client...
 // returns the total amount of credits that are currently in the wallet
-func getWalletCredits(hash string) float32 {
-	var credit float32
+func getWalletCredits(hash string) float64 {
+	var sum big.Float
 	for _, block := range bc.Chain {
 		for _, transaction := range block.Transactions {
 			if transaction.Recipient == hash {
-				credit = credit + transaction.Amount
+				sum.Add(&sum, big.NewFloat(transaction.Amount))
 			}
 			if transaction.Sender == hash {
-				credit = credit - transaction.Amount
+				sum.Sub(&sum, big.NewFloat(transaction.Amount))
 			}
 		}
 	}
 
 	for _, pendingTransactions := range bc.Transactions {
 		if pendingTransactions.Recipient == hash {
-			credit = credit + pendingTransactions.Amount
+			sum.Add(&sum, big.NewFloat(pendingTransactions.Amount))
 		}
 		if pendingTransactions.Sender == hash {
-			credit = credit - pendingTransactions.Amount
+			sum.Sub(&sum, big.NewFloat(pendingTransactions.Amount))
 		}
 	}
-	return credit
+
+	f64, _ := sum.Float64()
+	return f64
 }
