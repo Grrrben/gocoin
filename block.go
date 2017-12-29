@@ -25,6 +25,7 @@ func announceMinedBlock(cl Client, bl Block) {
 	payload, err := json.Marshal(blockAndSender)
 	if err != nil {
 		golog.Errorf("Could not marshall block or client. Msg: %s", err)
+		panic(err)
 	}
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payload))
