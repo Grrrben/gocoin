@@ -49,7 +49,6 @@ func TestNum (t *testing.T) {
 		Port:     8001,
 		Name:     "client2",
 	}
-
 	cls.addClient(secondClient)
 
 	if cls.num() != 2 {
