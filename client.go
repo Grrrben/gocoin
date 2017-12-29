@@ -26,6 +26,7 @@ func greet(cl Client) {
 	payload, err := json.Marshal(me)
 	if err != nil {
 		golog.Warning("Could not marshall client: Me")
+		panic(err)
 	}
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payload))
@@ -49,6 +50,7 @@ func greet(cl Client) {
 // createWallet Creates a wallet and sets the hash of the new wallet on the Client.
 // Is is done only once. As soon as the wallet hash is set this function does nothing.
 // If a clients mines a block, the incentive is sent to this wallet address
+// todo Why is the Hash not set on cl?
 func (cl Client) createWallet() string {
 	if !hasValidHash(cl) {
 		wallet := createWallet()
