@@ -19,7 +19,7 @@ func initClients() *Clients {
 // A Client can only be added a single time, the list is unique.
 // return bool true on success.
 func (cls *Clients) addClient(cl Client) bool {
-	cl.createWallet()
+	cl.Hash = cl.createWallet()
 	for _, c := range cls.List {
 		if c.getAddress() == cl.getAddress() {
 			golog.Warningf("Client already known: %s", c.getAddress())

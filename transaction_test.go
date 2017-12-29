@@ -22,19 +22,6 @@ func TestGetHash(t *testing.T) {
 	}
 }
 
-func TestValidHash(t *testing.T) {
-	hash := "fad5e7a92f1c43b1523614336a07f98b894bb80fee06b6763b50ab03b597d5f4"
-	if !validHash(hash) {
-		t.Errorf("Valid hash '%s' was not tested positive", hash)
-
-	}
-
-	invalidHash := "notagoodhash"
-	if validHash(invalidHash) {
-		t.Errorf("Invalid hash '%s' was tested positive", invalidHash)
-	}
-}
-
 func TestCheckTransaction(t *testing.T) {
 	// an invalid transaction
 	tr := Transaction{

@@ -19,7 +19,7 @@ func init() {
 		Port:     8000,
 		Name:     "client1",
 	}
-	me.createWallet()
+	me.Hash = me.createWallet()
 	cls.addClient(me)
 }
 
