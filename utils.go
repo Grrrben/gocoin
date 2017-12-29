@@ -1,6 +1,8 @@
 package main
 
 import (
+	"log"
+	"regexp"
 	"sort"
 )
 
@@ -42,4 +44,26 @@ func sortMapAscending(presorted map[interface{}]int) PairList {
 
 	sort.Sort(sortedList)
 	return sortedList
+}
+
+// hasValidHash checks a hash for length and regex of the hex.
+// It does _not_ check for existince of a specific hash.
+func hasValidHash(object hashable) bool {
+	return validHash(object.getHash())
+}
+
+// validHash checks a hash for length and regex of the hex.
+// It does _not_ check for existince of a wallet with this specific hash.
+func validHash(hash string) bool {
+	// fad5e7a92f1c43b1523614336a07f98b894bb80fee06b6763b50ab03b597d5f4
+	regex, err := regexp.Compile(`[a-f0-9]{64}`)
+
+	if err != nil {
+		log.Fatal("Could not compile regex")
+	}
+	if regex.MatchString(hash) {
+		return true
+	} else {
+		return false
+	}
 }

@@ -45,8 +45,8 @@ func (a *App) Initialize() {
 		Hostname: name,
 		Port:     clientPort,
 		Name:     *clientName,
-		Hash:     createClientHash(),
 	}
+	cl.Hash = cl.createWallet()
 
 	me = cl
 	// register me as the first client

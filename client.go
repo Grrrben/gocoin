@@ -46,11 +46,15 @@ func greet(cl Client) {
 	}
 }
 
-// createClientHash Creates a wallet and returns the hash of the new wallet.
+// createWallet Creates a wallet and sets the hash of the new wallet on the Client.
+// Is is done only once. As soon as the wallet hash is set this function does nothing.
 // If a clients mines a block, the incentive is sent to this wallet address
-func createClientHash() string {
-	wallet := createWallet()
-	return wallet.hash
+func (cl Client) createWallet() string {
+	if !hasValidHash(cl) {
+		wallet := createWallet()
+		cl.Hash = wallet.hash
+	}
+	return cl.Hash
 }
 
 // to make each Client a Hashable (interface)

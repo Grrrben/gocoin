@@ -7,9 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/grrrben/golog"
-	"log"
 	"net/http"
-	"regexp"
 )
 
 type Transaction struct {
@@ -40,22 +38,6 @@ func checkHashesEqual(first hashable, second hashable) bool {
 		return true
 	}
 	return false
-}
-
-// validHash checks a hash for length and regex of the hex.
-// It does _not_ check for existince of a wallet with this specific hash.
-func validHash(hash string) bool {
-	// fad5e7a92f1c43b1523614336a07f98b894bb80fee06b6763b50ab03b597d5f4
-	regex, err := regexp.Compile(`[a-f0-9]{64}`)
-
-	if err != nil {
-		log.Fatal("Could not compile regex")
-	}
-	if regex.MatchString(hash) {
-		return true
-	} else {
-		return false
-	}
 }
 
 // checkTransaction performs multiple checks on a transaction
