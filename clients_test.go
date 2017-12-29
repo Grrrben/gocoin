@@ -1,17 +1,15 @@
 package main
 
 import (
-	"testing"
-	"reflect"
 	"fmt"
+	"reflect"
+	"testing"
 )
 
 func TestInitClients(t *testing.T) {
 	cls = initClients()
 
-
 	typeof := fmt.Sprint(reflect.TypeOf(cls))
-
 
 	if typeof != "*main.Clients" {
 		t.Errorf("Wrong type, expected *main.Clients, got %s", typeof)
@@ -38,7 +36,7 @@ func TestAddClient(t *testing.T) {
 	}
 }
 
-func TestNum (t *testing.T) {
+func TestNum(t *testing.T) {
 	if cls.num() != 1 {
 		t.Errorf("Expected 1 client, got %d.", cls.num())
 	}

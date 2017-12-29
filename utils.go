@@ -1,9 +1,9 @@
 package main
 
 import (
-	"sort"
-	"regexp"
 	"log"
+	"regexp"
+	"sort"
 )
 
 // A data structure to hold key/value pairs
