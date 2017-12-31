@@ -29,8 +29,8 @@ func TestGetClientHash(t *testing.T) {
 }
 
 func TestGetClientAddress(t *testing.T) {
-	if client.getAddress() != "http://localhost:8000" {
-		t.Errorf("Incorrect client address: Expected http://localhost:8000, got %s.", client.getAddress())
+	if client.getAddress() != "http://localhost:8001" {
+		t.Errorf("Incorrect client address: Expected http://localhost:8001, got %s.", client.getAddress())
 	}
 }
 
