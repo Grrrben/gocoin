@@ -13,7 +13,7 @@ func init() {
 		Port:     8001,
 		Name:     "client1",
 	}
-	client.Hash = client.createWallet()
+	client.createWallet()
 }
 
 func TestCreateClientWallet(t *testing.T) {
@@ -41,6 +41,6 @@ func TestGreet(t *testing.T) {
 		Port:     8000,
 		Name:     "this is me",
 	}
-	me.Hash = me.createWallet()
+	me.createWallet()
 	greet(client)
 }

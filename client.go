@@ -50,13 +50,11 @@ func greet(cl Client) {
 // createWallet Creates a wallet and sets the hash of the new wallet on the Client.
 // Is is done only once. As soon as the wallet hash is set this function does nothing.
 // If a clients mines a block, the incentive is sent to this wallet address
-// todo Why is the Hash not set on cl?
-func (cl Client) createWallet() string {
+func (cl *Client) createWallet() {
 	if !hasValidHash(cl) {
 		wallet := createWallet()
 		cl.Hash = wallet.hash
 	}
-	return cl.Hash
 }
 
 // to make each Client a Hashable (interface)
