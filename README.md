@@ -19,7 +19,7 @@ Usage: `-p=8001`
 
 ## API calls
 
-Postman [collection](https://www.getpostman.com/collections/ca46387e102621040d2c) of the call's.
+There is a Postman [collection](https://www.getpostman.com/collections/ca46387e102621040d2c) of the call's.
 
 ### Transactions
 
@@ -242,14 +242,15 @@ The POSTed data should be consistent with a Client.
 If successful, the client is added and the response will consist of the client and a total of clients in the network.
 `{"Client":{"hostname":"localhost","protocol":"http://","port":8003,"name":"Name of the client","hash":"f1c13a0c8292fa5c9dfe565a19f79c2993619e9b6c5da0669b5c886043224673"},"total":3}`
 
-The HTTP code is a 200 on success or a 409 if a conflict with curretn listed clients arises.
+The HTTP code is a 200 on success or a 409 if a conflict with current listed clients arises.
 
 ## TODO
 
 + Public/Private key pairs in transactions and/or wallets for proof of ownership.
 + gRCP instead of the http API
 + write _more_ tests
++ rules for mining (e.g. minimal number of transactions, a flexible difficulty)
 
 ## Issues
 
-+ Floating point accurancy issues in transactions / wallet totals.
++ rename client to node
