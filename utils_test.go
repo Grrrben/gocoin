@@ -43,7 +43,7 @@ func TestHasValidHash(t *testing.T) {
 		Port:     8000,
 		Name:     "client1",
 	}
-	testClient.Hash = testClient.createWallet()
+	testClient.createWallet()
 	if !hasValidHash(testClient) {
 		t.Errorf("Hash of client invalid (%s).", testClient.Hash)
 	}
