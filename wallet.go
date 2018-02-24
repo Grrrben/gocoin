@@ -5,9 +5,10 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"fmt"
-	"github.com/grrrben/golog"
 	"math/big"
 	"time"
+
+	"github.com/grrrben/golog"
 )
 
 type wallet struct {
@@ -31,7 +32,7 @@ func createWallet() wallet {
 }
 
 // getWalletCredits Loops all blocks/transactions and checks for the credits that are send or received.
-// Also loops the current pending transactions that are not mined yet. Of _this_ client...
+// Also loops the current pending transactions that are not mined yet. Of _this_ node...
 // returns the total amount of credits that are currently in the wallet
 func getWalletCredits(hash string) float64 {
 	var sum big.Float

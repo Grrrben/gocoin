@@ -37,15 +37,15 @@ func TestSortMapAscending(t *testing.T) {
 }
 
 func TestHasValidHash(t *testing.T) {
-	testClient := Client{
+	testNode := Node{
 		Protocol: "http://",
 		Hostname: "127.0.0.1",
 		Port:     8000,
-		Name:     "client1",
+		Name:     "node1",
 	}
-	testClient.createWallet()
-	if !hasValidHash(testClient) {
-		t.Errorf("Hash of client invalid (%s).", testClient.Hash)
+	testNode.createWallet()
+	if !hasValidHash(testNode) {
+		t.Errorf("Hash of node invalid (%s).", testNode.Hash)
 	}
 }
 

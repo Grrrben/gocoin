@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/grrrben/golog"
 	"net/http"
+
+	"github.com/grrrben/golog"
 )
 
 type Block struct {
@@ -16,15 +17,15 @@ type Block struct {
 	PreviousHash string        `json:"previousHash"`
 }
 
-// announceMinedBlock shares the block with other clients. It is done in a goroutine.
-// Other clients should check the validity of the new block on their chain and add it.
-func announceMinedBlock(cl Client, bl Block) {
+// announceMinedBlock shares the block with other nodes. It is done in a goroutine.
+// Other nodes should check the validity of the new block on their chain and add it.
+func announceMinedBlock(cl Node, bl Block) {
 	url := fmt.Sprintf("%s/block/distributed", cl.getAddress())
 
 	blockAndSender := map[string]interface{}{"block": bl, "sender": me.getAddress()}
 	payload, err := json.Marshal(blockAndSender)
 	if err != nil {
-		golog.Errorf("Could not marshall block or client. Msg: %s", err)
+		golog.Errorf("Could not marshall block or node. Msg: %s", err)
 		panic(err)
 	}
 
@@ -40,7 +41,7 @@ func announceMinedBlock(cl Client, bl Block) {
 	if err != nil {
 		golog.Warningf("POST request error: %s", err)
 		// I don't want to panic here, but it might be a good idea to
-		// remove the client from the list
+		// remove the node from the list
 	} else {
 		resp.Body.Close()
 	}

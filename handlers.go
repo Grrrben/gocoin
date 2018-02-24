@@ -3,10 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/mux"
-	"github.com/grrrben/golog"
 	"net/http"
 	"strconv"
+
+	"github.com/gorilla/mux"
+	"github.com/grrrben/golog"
 )
 
 func (a *App) index(w http.ResponseWriter, r *http.Request) {
@@ -50,11 +51,11 @@ func (a *App) currentTransactions(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, bc.Transactions)
 }
 
-// distributedTransaction receives a transaction from another client in the network.
+// distributedTransaction receives a transaction from another node in the network.
 // It is used to distribute the _unmined_ transactions throughout the network
 func (a *App) distributedTransaction(w http.ResponseWriter, r *http.Request) {
 	defer golog.Flush()
-	golog.Infof("starting distributedTransaction on Client: %s", me.getAddress())
+	golog.Infof("starting distributedTransaction on Node: %s", me.getAddress())
 
 	type Payload struct {
 		Transaction Transaction `json:"transaction"`
@@ -65,7 +66,7 @@ func (a *App) distributedTransaction(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&payload)
 
 	if err != nil {
-		golog.Warningf("Invalid Transaction (Unable to decode) on Client: %s", me.getAddress())
+		golog.Warningf("Invalid Transaction (Unable to decode) on Node: %s", me.getAddress())
 		respondWithError(w, http.StatusUnprocessableEntity, "Invalid Transaction (Unable to decode)")
 	} else {
 		golog.Infof("payload: %v", payload)
@@ -73,14 +74,14 @@ func (a *App) distributedTransaction(w http.ResponseWriter, r *http.Request) {
 			golog.Infof("transaction: %v", payload.Transaction)
 			_, err = bc.newTransaction(payload.Transaction)
 			if err != nil {
-				golog.Warningf("%s on Client: %s", err.Error(), me.getAddress())
+				golog.Warningf("%s on Node: %s", err.Error(), me.getAddress())
 				respondWithError(w, http.StatusUnprocessableEntity, err.Error())
 			} else {
-				golog.Infof("Transaction added on Client: %s", me.getAddress())
+				golog.Infof("Transaction added on Node: %s", me.getAddress())
 				respondWithJSON(w, http.StatusOK, "Transaction added")
 			}
 		} else {
-			golog.Warningf("Invalid Transaction (Already exists) on Client: %s", me.getAddress())
+			golog.Warningf("Invalid Transaction (Already exists) on Node: %s", me.getAddress())
 			respondWithError(w, http.StatusUnprocessableEntity, "Invalid Transaction (Already exists)")
 		}
 
@@ -112,7 +113,7 @@ func (a *App) newTransaction(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// distributedBlock is a receiver for blocks mined by other clients.
+// distributedBlock is a receiver for blocks mined by other nodes.
 // It catches the newly mined block and checks for validity on his own chain
 // If it is valid the block is added and a statusOk is returned.
 // Otherwise it gives an error
@@ -223,29 +224,29 @@ func (a *App) chainStatus(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, resp)
 }
 
-// connectClient Connect a Client to the network which is represented
-// in the Clients.list The postdata should consist of a standard Client
-func (a *App) connectClient(w http.ResponseWriter, r *http.Request) {
+// connectNode Connect a Node to the network which is represented
+// in the Nodes.list The postdata should consist of a standard Node
+func (a *App) connectNode(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
-	var newCl Client
+	var newCl Node
 	err := decoder.Decode(&newCl)
 	if err != nil {
-		golog.Warning("Could not decode postdata of new client")
+		golog.Warning("Could not decode postdata of new node")
 		respondWithError(w, http.StatusBadRequest, "invalid json")
 		panic(err)
 	}
-	// register the client
-	added := cls.addClient(newCl)
+	// register the node
+	added := cls.addNode(newCl)
 	if added {
-		resp := map[string]interface{}{"Client": newCl, "total": cls.num()}
+		resp := map[string]interface{}{"Node": newCl, "total": cls.num()}
 		respondWithJSON(w, http.StatusOK, resp)
 	} else {
-		respondWithError(w, http.StatusConflict, "Client could not be added")
+		respondWithError(w, http.StatusConflict, "Node could not be added")
 	}
 }
 
-// getClients response is the list of Clients
-func (a *App) getClients(w http.ResponseWriter, r *http.Request) {
+// getNodes response is the list of Nodes
+func (a *App) getNodes(w http.ResponseWriter, r *http.Request) {
 	resp := map[string]interface{}{"list": cls.List, "length": len(cls.List)}
 	respondWithJSON(w, http.StatusOK, resp)
 }
