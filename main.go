@@ -20,7 +20,7 @@ const zerohash = "00000000000000000000000000000000000000000000000000000000000000
 
 func main() {
 	prt := flag.String("p", "8000", "Port on which the app will run, defaults to 8000")
-	nodeName = flag.String("name", "0", "Set a name for the node")
+	nodeName = flag.String("name", "Node_X", "Set a name for the node")
 	flag.Parse()
 
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
