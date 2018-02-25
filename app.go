@@ -6,10 +6,11 @@ import (
 	"log"
 	"net/http"
 
+	"os"
+
 	"github.com/BurntSushi/toml"
 	"github.com/gorilla/mux"
 	"github.com/grrrben/golog"
-	"os"
 )
 
 type Server struct {
@@ -38,23 +39,23 @@ func (a *App) Initialize() {
 		return
 	}
 
-	// add the Client to the stack
-	cls = initClients() // a pointer to the Clients struct
-	cl := Client{
+	// add the Node to the stack
+	cls = initNodes() // a pointer to the Nodes struct
+	cl := Node{
 		Protocol: "http://",
 		Hostname: name,
-		Port:     clientPort,
-		Name:     *clientName,
+		Port:     nodePort,
+		Name:     *nodeName,
 	}
 	cl.createWallet()
 
 	me = cl
-	// register me as the first client
-	cls.addClient(cl)
-	// fetch a list of existing Clients
-	cls.syncClients()
-	// register me at all other Clients
-	cls.greetClients()
+	// register me as the first node
+	cls.addNode(cl)
+	// fetch a list of existing Nodes
+	cls.syncNodes()
+	// register me at all other Nodes
+	cls.greetNodes()
 
 	bc = initBlockchain()
 	bc.getCurrentTransactions()
@@ -67,7 +68,7 @@ func (a *App) Initialize() {
 }
 
 func (a *App) Run() {
-	p := fmt.Sprintf("%d", clientPort)
+	p := fmt.Sprintf("%d", nodePort)
 	fmt.Println("Starting server")
 	fmt.Printf("Running on Port %s\n", p)
 	log.Fatal(http.ListenAndServe(":"+p, a.Router))
@@ -93,9 +94,9 @@ func (a *App) initializeRoutes() {
 	a.Router.HandleFunc("/validate", a.validate).Methods("GET")
 	a.Router.HandleFunc("/resolve", a.resolve).Methods("GET")
 	a.Router.HandleFunc("/status", a.chainStatus).Methods("GET")
-	// Clients
-	a.Router.HandleFunc("/client", a.connectClient).Methods("POST")
-	a.Router.HandleFunc("/client", a.getClients).Methods("GET")
+	// Nodes
+	a.Router.HandleFunc("/node", a.connectNode).Methods("POST")
+	a.Router.HandleFunc("/node", a.getNodes).Methods("GET")
 }
 
 // readConfig loads the config file.

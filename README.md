@@ -12,9 +12,9 @@ After building the app it will run on port 8000 unless a -p flag is set.
 
 ## Flags
 
-`-name` The name of your client. Optional.  
+`-name` The name of your node. Optional.
   
-`-p` Port number on which the client will run. If omitted, the client will run on port `8000`.  
+`-p` Port number on which the node will run. If omitted, the node will run on port `8000`.
 Usage: `-p=8001`
 
 ## API calls
@@ -42,7 +42,7 @@ The transaction must have valid hashes for sender and recipient otherwise a 422 
 `Invalid Transaction (Recipient invalid)`  
 `Invalid Transaction (Insufficient Credit)`
 
-If the transaction is added the client will distribute the transaction throughout the network.
+If the transaction is added the node will distribute the transaction throughout the network.
 
 [GET] `http://localhost:8000/transactions/{hash}`
 
@@ -55,7 +55,7 @@ Shows all transactions that are not added to the blockchain yet.
 
 [POST] `http://localhost:8000/transaction/distributed`
 
-Add a new transaction to this client that is distributed by another client:
+Add a new transaction to this node that is distributed by another node:
 
 ```
 {
@@ -112,8 +112,8 @@ Fetches block with matching (int) index
 Response identical to `/block`.  
 
 [POST] `http://localhost:8000/block/distributed`
-A receiver for blocks mined by other clients.  
-Should contain a (Block) block and a (string) sender. The method is called automatically by other clients when they mined a block.  
+A receiver for blocks mined by other nodes.
+Should contain a (Block) block and a (string) sender. The method is called automatically by other nodes when they mined a block.
 
 Gives a 200 on success or a 409 if a conflict arises.
 
@@ -199,14 +199,14 @@ Fetch the entire chain.
 [GET] `http://localhost:8000/resolve`
 
 Resolve conflicts in the chain.
-The client checks the list of other nodes in the network and replaces it's blockchain if a larger one is found.
+The node checks the list of other nodes in the network and replaces it's blockchain if a larger one is found.
 Responses with true if the chain is replaced, otherwise false.
 
 ### Network
 
-[GET] `http://localhost:8000/client` Get a list of clients
+[GET] `http://localhost:8000/node` Get a list of nodes
 
-The response exists of a `length`, representing the total number oof clients, and a `list` of all clients.
+The response exists of a `length`, representing the total number oof nodes, and a `list` of all nodes.
 
 ```
 {
@@ -216,7 +216,7 @@ The response exists of a `length`, representing the total number oof clients, an
             "Ip": "127.0.0.1",
             "Protocol": "http://",
             "Port": 8000,
-            "Name": "client1",
+            "Name": "node1",
             "Hash": "f1c13a0c8292fa5c9dfe565a19f79c2993619e9b6c5da0669b5c886043224673"
         },
         {
@@ -226,9 +226,9 @@ The response exists of a `length`, representing the total number oof clients, an
 }
 ```
 
-[POST] `http://localhost:8000/client` Add a client to the network
+[POST] `http://localhost:8000/node` Add a node to the network
 
-The POSTed data should be consistent with a Client.
+The POSTed data should be consistent with a Node.
 
 ```
 {
@@ -239,10 +239,10 @@ The POSTed data should be consistent with a Client.
 }
 ```
 
-If successful, the client is added and the response will consist of the client and a total of clients in the network.
-`{"Client":{"hostname":"localhost","protocol":"http://","port":8003,"name":"Name of the client","hash":"f1c13a0c8292fa5c9dfe565a19f79c2993619e9b6c5da0669b5c886043224673"},"total":3}`
+If successful, the node is added and the response will consist of the node and a total of nodes in the network.
+`{"Node":{"hostname":"localhost","protocol":"http://","port":8003,"name":"Name of the node","hash":"f1c13a0c8292fa5c9dfe565a19f79c2993619e9b6c5da0669b5c886043224673"},"total":3}`
 
-The HTTP code is a 200 on success or a 409 if a conflict with current listed clients arises.
+The HTTP code is a 200 on success or a 409 if a conflict with current listed nodes arises.
 
 ## TODO
 
@@ -253,4 +253,4 @@ The HTTP code is a 200 on success or a 409 if a conflict with current listed cli
 
 ## Issues
 
-+ rename client to node
++ rename node to node

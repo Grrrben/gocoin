@@ -12,15 +12,15 @@ import (
 func init() {
 	// setup
 	flag.Parse()
-	cls = initClients()
-	me = Client{
+	cls = initNodes()
+	me = Node{
 		Protocol: "http://",
 		Hostname: "127.0.0.1",
 		Port:     8000,
-		Name:     "client1",
+		Name:     "node1",
 	}
 	me.createWallet()
-	cls.addClient(me)
+	cls.addNode(me)
 }
 
 func TestInitBlockchain(t *testing.T) {
