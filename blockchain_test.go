@@ -20,7 +20,7 @@ func init() {
 		Name:     "node1",
 	}
 	me.createWallet()
-	cls.addNode(me)
+	cls.addNode(&me)
 }
 
 func TestInitBlockchain(t *testing.T) {

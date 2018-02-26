@@ -51,7 +51,7 @@ func (a *App) Initialize() {
 
 	me = cl
 	// register me as the first node
-	cls.addNode(cl)
+	cls.addNode(&cl)
 	// fetch a list of existing Nodes
 	cls.syncNodes()
 	// register me at all other Nodes

@@ -23,7 +23,7 @@ func TestAddNode(t *testing.T) {
 		Port:     8000,
 		Name:     "node_x",
 	}
-	cls.addNode(testNode)
+	cls.addNode(&testNode)
 
 	if len(cls.List) != 1 {
 		t.Error("Added one node, list should have length 1.")
@@ -47,7 +47,7 @@ func TestNum(t *testing.T) {
 		Port:     8001,
 		Name:     "node2",
 	}
-	cls.addNode(secondNode)
+	cls.addNode(&secondNode)
 
 	if cls.num() != 2 {
 		t.Errorf("Expected 2 nodes, got %d.", cls.num())

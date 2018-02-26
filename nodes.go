@@ -17,9 +17,9 @@ func initNodes() *Nodes {
 }
 
 // addNode Add a new Node to the list.
-// A N ode can only be added a single time, the list is unique.
+// A Node can only be added a single time, the list is unique.
 // return bool true on success.
-func (cls *Nodes) addNode(cl Node) bool {
+func (cls *Nodes) addNode(cl *Node) bool {
 	cl.createWallet()
 	for _, c := range cls.List {
 		if c.getAddress() == cl.getAddress() {
@@ -27,7 +27,7 @@ func (cls *Nodes) addNode(cl Node) bool {
 			return false
 		}
 	}
-	cls.List = append(cls.List, cl)
+	cls.List = append(cls.List, *cl)
 	glog.Infof("Node added (%s). Nodes: %d\n", cl.getAddress(), cls.num())
 	return true
 }
@@ -61,7 +61,7 @@ func (cls *Nodes) syncNodes() bool {
 	// just try to add all nodes
 	i := 0
 	for _, c := range externalCls.List {
-		success := cls.addNode(c)
+		success := cls.addNode(&c)
 		if success == true {
 			i++
 		}

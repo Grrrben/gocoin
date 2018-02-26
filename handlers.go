@@ -236,7 +236,7 @@ func (a *App) connectNode(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	// register the node
-	added := cls.addNode(newCl)
+	added := cls.addNode(&newCl)
 	if added {
 		resp := map[string]interface{}{"Node": newCl, "total": cls.num()}
 		respondWithJSON(w, http.StatusOK, resp)
