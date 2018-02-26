@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/grrrben/golog"
+	"github.com/grrrben/glog"
 )
 
 type Transaction struct {
@@ -56,19 +56,19 @@ func checkTransaction(tr Transaction) (success bool, err error) {
 // announceTransaction distributes new transaction in the network
 // It is preferably done in a goroutine.
 func announceTransaction(cl Node, tr Transaction) {
-	defer golog.Flush()
+	defer glog.Flush()
 	url := fmt.Sprintf("%s/transaction/distributed", cl.getAddress())
 
 	transactionAndSender := map[string]interface{}{"transaction": tr, "sender": me.getAddress()}
-	golog.Infof("transactionAndSender to be distributed:\n %v", transactionAndSender)
+	glog.Infof("transactionAndSender to be distributed:\n %v", transactionAndSender)
 	payload, err := json.Marshal(transactionAndSender)
 	if err != nil {
-		golog.Errorf("Could not marshall transaction or node. Msg: %s", err)
+		glog.Errorf("Could not marshall transaction or node. Msg: %s", err)
 	}
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payload))
 	if err != nil {
-		golog.Warningf("Request setup error: %s", err)
+		glog.Warningf("Request setup error: %s", err)
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
@@ -76,11 +76,11 @@ func announceTransaction(cl Node, tr Transaction) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		golog.Warningf("POST request error: %s", err)
+		glog.Warningf("POST request error: %s", err)
 		// I don't want to panic here, but it might be a good idea to
 		// remove the node from the list
 	} else {
 		defer resp.Body.Close()
-		golog.Info("Transaction distributed")
+		glog.Info("Transaction distributed")
 	}
 }
