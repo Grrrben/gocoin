@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/grrrben/golog"
+	"github.com/grrrben/glog"
 )
 
 // this is me, a node
@@ -26,13 +26,13 @@ func greet(cl Node) {
 	url := fmt.Sprintf("%s/node", cl.getAddress())
 	payload, err := json.Marshal(me)
 	if err != nil {
-		golog.Warning("Could not marshall node: Me")
+		glog.Warning("Could not marshall node: Me")
 		panic(err)
 	}
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payload))
 	if err != nil {
-		golog.Warningf("Request setup error: %s", err)
+		glog.Warningf("Request setup error: %s", err)
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
@@ -40,7 +40,7 @@ func greet(cl Node) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		golog.Warningf("POST request error: %s", err)
+		glog.Warningf("POST request error: %s", err)
 		// I don't want to panic here, but it might be a good idea to
 		// remove the node from the list
 	} else {

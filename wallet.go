@@ -8,7 +8,7 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/grrrben/golog"
+	"github.com/grrrben/glog"
 )
 
 type wallet struct {
@@ -21,7 +21,7 @@ func createWallet() wallet {
 	var buf bytes.Buffer
 	err := binary.Write(&buf, binary.BigEndian, time.Now().Unix())
 	if err != nil {
-		golog.Warningf("Could not createWallet. Msg: %s", err)
+		glog.Warningf("Could not createWallet. Msg: %s", err)
 	}
 
 	w := wallet{

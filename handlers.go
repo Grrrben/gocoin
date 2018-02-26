@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
-	"github.com/grrrben/golog"
+	"github.com/grrrben/glog"
 )
 
 func (a *App) index(w http.ResponseWriter, r *http.Request) {
@@ -54,8 +54,8 @@ func (a *App) currentTransactions(w http.ResponseWriter, r *http.Request) {
 // distributedTransaction receives a transaction from another node in the network.
 // It is used to distribute the _unmined_ transactions throughout the network
 func (a *App) distributedTransaction(w http.ResponseWriter, r *http.Request) {
-	defer golog.Flush()
-	golog.Infof("starting distributedTransaction on Node: %s", me.getAddress())
+	defer glog.Flush()
+	glog.Infof("starting distributedTransaction on Node: %s", me.getAddress())
 
 	type Payload struct {
 		Transaction Transaction `json:"transaction"`
@@ -66,22 +66,22 @@ func (a *App) distributedTransaction(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&payload)
 
 	if err != nil {
-		golog.Warningf("Invalid Transaction (Unable to decode) on Node: %s", me.getAddress())
+		glog.Warningf("Invalid Transaction (Unable to decode) on Node: %s", me.getAddress())
 		respondWithError(w, http.StatusUnprocessableEntity, "Invalid Transaction (Unable to decode)")
 	} else {
-		golog.Infof("payload: %v", payload)
+		glog.Infof("payload: %v", payload)
 		if bc.isNonExistingTransaction(payload.Transaction) {
-			golog.Infof("transaction: %v", payload.Transaction)
+			glog.Infof("transaction: %v", payload.Transaction)
 			_, err = bc.newTransaction(payload.Transaction)
 			if err != nil {
-				golog.Warningf("%s on Node: %s", err.Error(), me.getAddress())
+				glog.Warningf("%s on Node: %s", err.Error(), me.getAddress())
 				respondWithError(w, http.StatusUnprocessableEntity, err.Error())
 			} else {
-				golog.Infof("Transaction added on Node: %s", me.getAddress())
+				glog.Infof("Transaction added on Node: %s", me.getAddress())
 				respondWithJSON(w, http.StatusOK, "Transaction added")
 			}
 		} else {
-			golog.Warningf("Invalid Transaction (Already exists) on Node: %s", me.getAddress())
+			glog.Warningf("Invalid Transaction (Already exists) on Node: %s", me.getAddress())
 			respondWithError(w, http.StatusUnprocessableEntity, "Invalid Transaction (Already exists)")
 		}
 
@@ -97,7 +97,7 @@ func (a *App) newTransaction(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&tr)
 
 	if err != nil {
-		golog.Warningf("Invalid Transaction (%s)", err.Error())
+		glog.Warningf("Invalid Transaction (%s)", err.Error())
 		respondWithError(w, http.StatusUnprocessableEntity, "Invalid Transaction (Unable to decode)")
 	} else {
 		// for a new transaction, time should be added by the system
@@ -129,7 +129,7 @@ func (a *App) distributedBlock(w http.ResponseWriter, r *http.Request) {
 	var payload Payload
 	err := decoder.Decode(&payload)
 	if err != nil {
-		golog.Warning("Could not decode postdata of new block")
+		glog.Warning("Could not decode postdata of new block")
 		respondWithError(w, http.StatusBadRequest, "invalid json")
 		panic(err)
 	}
@@ -198,7 +198,7 @@ func (a *App) blockByIndex(w http.ResponseWriter, r *http.Request) {
 
 	index, err := strconv.ParseInt(rawIndex, 10, 16) // always gives an uint64...
 	if err != nil {
-		golog.Errorf("Unable to cast block Index %s to int: %s", rawIndex, err)
+		glog.Errorf("Unable to cast block Index %s to int: %s", rawIndex, err)
 	}
 
 	found := false
@@ -231,7 +231,7 @@ func (a *App) connectNode(w http.ResponseWriter, r *http.Request) {
 	var newCl Node
 	err := decoder.Decode(&newCl)
 	if err != nil {
-		golog.Warning("Could not decode postdata of new node")
+		glog.Warning("Could not decode postdata of new node")
 		respondWithError(w, http.StatusBadRequest, "invalid json")
 		panic(err)
 	}

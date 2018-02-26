@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/grrrben/golog"
+	"github.com/grrrben/glog"
 )
 
 type Nodes struct {
@@ -23,12 +23,12 @@ func (cls *Nodes) addNode(cl Node) bool {
 	cl.createWallet()
 	for _, c := range cls.List {
 		if c.getAddress() == cl.getAddress() {
-			golog.Warningf("Node already known: %s", c.getAddress())
+			glog.Warningf("Node already known: %s", c.getAddress())
 			return false
 		}
 	}
 	cls.List = append(cls.List, cl)
-	golog.Infof("Node added (%s). Nodes: %d\n", cl.getAddress(), cls.num())
+	glog.Infof("Node added (%s). Nodes: %d\n", cl.getAddress(), cls.num())
 	return true
 }
 
@@ -46,17 +46,17 @@ func (cls *Nodes) syncNodes() bool {
 
 	resp, err := http.Get(url)
 	if err != nil {
-		golog.Warningf("Could not get list of Nodes on url: %s", url)
+		glog.Warningf("Could not get list of Nodes on url: %s", url)
 		return false
 	}
 
 	decodingErr := json.NewDecoder(resp.Body).Decode(&externalCls)
 	if decodingErr != nil {
-		golog.Warningf("Could not decode JSON of list of Nodes\n")
+		glog.Warningf("Could not decode JSON of list of Nodes\n")
 		return false
 	}
 
-	golog.Infof("externalCls:\n%v\n", externalCls)
+	glog.Infof("externalCls:\n%v\n", externalCls)
 
 	// just try to add all nodes
 	i := 0
@@ -66,7 +66,7 @@ func (cls *Nodes) syncNodes() bool {
 			i++
 		}
 	}
-	golog.Infof("%d external Node(s) added\n", i)
+	glog.Infof("%d external Node(s) added\n", i)
 	return true
 }
 
@@ -95,12 +95,12 @@ func (cls *Nodes) announceMinedBlocks(bl Block) {
 
 // distributeTransaction tells all nodes in the network about the new Transaction.
 func (cls *Nodes) distributeTransaction(tr Transaction) {
-	golog.Infof("Announcing transaction to %d nodes", len(cls.List))
+	glog.Infof("Announcing transaction to %d nodes", len(cls.List))
 	for _, cl := range cls.List {
 		if cl == me {
 			continue // no need to brag
 		}
-		golog.Info("Announcing transaction")
+		glog.Info("Announcing transaction")
 		go announceTransaction(cl, tr)
 	}
 }

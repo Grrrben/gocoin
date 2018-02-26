@@ -7,7 +7,9 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/grrrben/golog"
+	"log"
+
+	"github.com/grrrben/glog"
 )
 
 var bc *Blockchain
@@ -25,14 +27,14 @@ func main() {
 
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
-		golog.Fatalf("Could not set a logdir. Msg %s", err)
+		log.Fatalf("Could not set a logdir. Msg %s", err)
 	}
 
-	golog.SetLogDir(fmt.Sprintf("%s/log", dir))
+	glog.SetLogFile(fmt.Sprintf("%s/log/blockchain.log", dir))
 
 	u, err := strconv.ParseUint(*prt, 10, 16) // always gives an uint64...
 	if err != nil {
-		golog.Errorf("Unable to cast Prt to uint: %s", err)
+		glog.Errorf("Unable to cast Prt to uint: %s", err)
 	}
 	// different Nodes can have different ports,
 	// used to connect multiple Nodes in debug.

@@ -10,7 +10,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/gorilla/mux"
-	"github.com/grrrben/golog"
+	"github.com/grrrben/glog"
 )
 
 type Server struct {
@@ -59,9 +59,9 @@ func (a *App) Initialize() {
 
 	bc = initBlockchain()
 	bc.getCurrentTransactions()
-	golog.Info("Starting with a base blockchain:")
-	golog.Infof("Blockchain:\n %v\n", bc)
-	golog.Flush()
+	glog.Info("Starting with a base blockchain:")
+	glog.Infof("Blockchain:\n %v\n", bc)
+	glog.Flush()
 
 	a.Router = mux.NewRouter()
 	a.initializeRoutes()
