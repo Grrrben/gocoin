@@ -34,6 +34,10 @@ func TestAddNode(t *testing.T) {
 	if cl.Name != "node_x" {
 		t.Error("Wrong node in cls in test TestAddNode")
 	}
+
+	if len(cl.Hash) != 64 {
+		t.Error("Node has no valid hash in test TestAddNode")
+	}
 }
 
 func TestNum(t *testing.T) {
