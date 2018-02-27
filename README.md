@@ -2,6 +2,8 @@
 
 A blockchain/bitcoin implementation written in Go.
 
+[![Build Status](https://travis-ci.org/Grrrben/gocoin.svg?branch=master)](https://travis-ci.org/Grrrben/gocoin)
+
 ## Setup
 
 go version go1.9beta2
