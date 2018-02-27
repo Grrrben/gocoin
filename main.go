@@ -31,6 +31,7 @@ func main() {
 	}
 
 	glog.SetLogFile(fmt.Sprintf("%s/log/blockchain.log", dir))
+	glog.SetLogLevel(glog.Log_level_warning)
 
 	u, err := strconv.ParseUint(*prt, 10, 16) // always gives an uint64...
 	if err != nil {
