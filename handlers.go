@@ -213,7 +213,7 @@ func (a *App) blockByIndex(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if found == false {
-		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Could not find block by index %s", index))
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Could not find block by index %d", index))
 	}
 }
 

@@ -6,7 +6,9 @@ A blockchain/bitcoin implementation written in Go.
 
 ## Setup
 
-go version go1.9beta2
+Build and tested in go 1.10
+
+You can check your version with `go version`. The latest versions of Golang are found on the [Go website](https://golang.org/dl/).
 
 After building the app it will run on port 8000 unless a -p flag is set.
 
@@ -255,4 +257,4 @@ The HTTP code is a 200 on success or a 409 if a conflict with current listed nod
 
 ## Issues
 
-+ rename node to node
++ No known issues.

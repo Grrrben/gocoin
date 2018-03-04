@@ -112,7 +112,7 @@ func (bc *Blockchain) proofOfWork(lastProof int64) int64 {
 		proof += 1
 		i++
 	}
-	glog.Infof("Proof found in %d cycles (difficulty %s)\n", i, hashEndsWith)
+	glog.Infof("Proof found in %d cycles (difficulty %d)\n", i, hashDifficulty)
 	return proof
 
 }
