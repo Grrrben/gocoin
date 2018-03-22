@@ -25,7 +25,7 @@ type hashable interface {
 
 // getHash a unique hash for a transaction
 func (tr Transaction) getHash() string {
-	str := tr.Sender + tr.Recipient + fmt.Sprintf("%.8f", tr.Amount) + fmt.Sprintf("%d", tr.Time)
+	str := fmt.Sprintf("%s%s%.8f%d", tr.Sender, tr.Recipient, tr.Amount, tr.Time)
 	sha := sha256.New()
 	sha.Write([]byte(str))
 	return fmt.Sprintf("%x", sha.Sum(nil))
@@ -34,11 +34,8 @@ func (tr Transaction) getHash() string {
 
 // checkHashesEqual checks if the hashes of 2 objects are the same
 // objects should have interface hashable.
-func checkHashesEqual(first hashable, second hashable) bool {
-	if first.getHash() == second.getHash() {
-		return true
-	}
-	return false
+func checkHashesEqual(first, second hashable) bool {
+	return first.getHash() == second.getHash()
 }
 
 // checkTransaction performs multiple checks on a transaction
@@ -68,19 +65,18 @@ func announceTransaction(cl Node, tr Transaction) {
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payload))
 	if err != nil {
-		glog.Warningf("Request setup error: %s", err)
-		panic(err)
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		glog.Warningf("POST request error: %s", err)
-		// I don't want to panic here, but it might be a good idea to
-		// remove the node from the list
+		glog.Errorf("Request setup error: %s", err)
 	} else {
-		defer resp.Body.Close()
-		glog.Info("Transaction distributed")
+		req.Header.Set("Content-Type", "application/json")
+		client := &http.Client{}
+		resp, err := client.Do(req)
+		if err != nil {
+			glog.Warningf("POST request error: %s", err)
+			// I don't want to panic here, but it might be a good idea to
+			// remove the node from the list
+		} else {
+			defer resp.Body.Close()
+			glog.Info("Transaction distributed")
+		}
 	}
 }

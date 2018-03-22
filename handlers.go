@@ -196,7 +196,7 @@ func (a *App) blockByIndex(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	rawIndex := vars["index"]
 
-	index, err := strconv.ParseInt(rawIndex, 10, 16) // always gives an uint64...
+	index, err := strconv.ParseInt(rawIndex, 10, 16) // always gives an int64...
 	if err != nil {
 		glog.Errorf("Unable to cast block Index %s to int: %s", rawIndex, err)
 	}
