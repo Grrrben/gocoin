@@ -12,8 +12,8 @@ type Nodes struct {
 }
 
 func initNodes() *Nodes {
-	cls := &Nodes{}
-	return cls
+	nodes := &Nodes{}
+	return nodes
 }
 
 // addNode Add a new Node to the list.
@@ -56,7 +56,7 @@ func (nodes *Nodes) syncNodes() bool {
 		return false
 	}
 
-	glog.Infof("externalCls:\n%v\n", externalNodes)
+	glog.Infof("external nodes:\n%v", externalNodes)
 
 	// just try to add all nodes
 	i := 0
