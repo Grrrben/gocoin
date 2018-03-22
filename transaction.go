@@ -52,20 +52,22 @@ func checkTransaction(tr Transaction) (success bool, err error) {
 
 // announceTransaction distributes new transaction in the network
 // It is preferably done in a goroutine.
-func announceTransaction(cl Node, tr Transaction) {
+func announceTransaction(node Node, tr Transaction) {
 	defer glog.Flush()
-	url := fmt.Sprintf("%s/transaction/distributed", cl.getAddress())
+	url := fmt.Sprintf("%s/transaction/distributed", node.getAddress())
 
-	transactionAndSender := map[string]interface{}{"transaction": tr, "sender": me.getAddress()}
+	transactionAndSender := make(map[string]interface{}, 2)
+	transactionAndSender["transaction"] = tr
+	transactionAndSender["sender"] = me.getAddress()
 	glog.Infof("transactionAndSender to be distributed:\n %v", transactionAndSender)
 	payload, err := json.Marshal(transactionAndSender)
 	if err != nil {
-		glog.Errorf("Could not marshall transaction or node. Msg: %s", err)
+		glog.Errorf("Could not marshall transaction or node. Msg: %s", err.Error())
 	}
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payload))
 	if err != nil {
-		glog.Errorf("Request setup error: %s", err)
+		glog.Errorf("Request setup error: %s", err.Error())
 	} else {
 		req.Header.Set("Content-Type", "application/json")
 		client := &http.Client{}
@@ -73,7 +75,7 @@ func announceTransaction(cl Node, tr Transaction) {
 		if err != nil {
 			glog.Warningf("POST request error: %s", err)
 			// I don't want to panic here, but it might be a good idea to
-			// remove the node from the list
+			// remove the node from the list (todo)
 		} else {
 			defer resp.Body.Close()
 			glog.Info("Transaction distributed")
