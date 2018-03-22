@@ -31,7 +31,7 @@ func announceMinedBlock(cl Node, bl Block) {
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payload))
 	if err != nil {
-		glog.Errorf("Request setup error: %s", err)
+		glog.Errorf("Request setup error: %s", err.Error())
 	} else {
 		req.Header.Set("Content-Type", "application/json")
 

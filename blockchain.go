@@ -93,7 +93,7 @@ func hash(bl Block) string {
 	var buf bytes.Buffer
 	err := gob.NewEncoder(&buf).Encode(bl)
 	if err != nil {
-		glog.Errorf("Could not compute hash: %s", err)
+		glog.Errorf("Could not compute hash: %s", err.Error())
 	}
 	return fmt.Sprintf("%x", sha256.Sum256(buf.Bytes())) // %x; base 16, with lower-case letters for a-f
 }
@@ -187,13 +187,13 @@ func (bc *Blockchain) analyseInvalidBlock(bl Block, sender string) bool {
 
 			resp, err := http.Get(url)
 			if err != nil {
-				glog.Warningf("Request error: %s", err)
+				glog.Warningf("Request error: %s", err.Error())
 				return false
 			}
 
 			decodingErr := json.NewDecoder(resp.Body).Decode(&nextBlock)
 			if decodingErr != nil {
-				glog.Warningf("Decoding error: %s", err)
+				glog.Warningf("Decoding error: %s", err.Error())
 				return false
 			}
 
@@ -255,7 +255,7 @@ func (bc *Blockchain) getCurrentTransactions() bool {
 			}
 			resp, err := http.Get(url)
 			if err != nil {
-				glog.Warningf("Transactions request error: %s", err)
+				glog.Warningf("Transactions request error: %s", err.Error())
 				continue
 			}
 
@@ -264,7 +264,7 @@ func (bc *Blockchain) getCurrentTransactions() bool {
 			decodingErr := json.NewDecoder(resp.Body).Decode(&transactions)
 
 			if decodingErr != nil {
-				glog.Warningf("Could not decode JSON of external transactions: %s", err)
+				glog.Warningf("Could not decode JSON of external transactions: %s", err.Error())
 				continue
 			}
 			resp.Body.Close()
@@ -348,7 +348,7 @@ func (bc *Blockchain) resolve() bool {
 		url := fmt.Sprintf("%s/chain", node.getAddress())
 		resp, err := http.Get(url)
 		if err != nil {
-			glog.Warningf("Chain request error: %s", err)
+			glog.Warningf("Chain request error: %s", err.Error())
 			// I don't want to panic here, but it could be a good idea to
 			// remove the node from the list
 			continue
@@ -358,7 +358,7 @@ func (bc *Blockchain) resolve() bool {
 		decodingErr := json.NewDecoder(resp.Body).Decode(&extChain)
 
 		if decodingErr != nil {
-			glog.Warningf("Could not decode JSON of external blockchain: %s", err)
+			glog.Warningf("Could not decode JSON of external blockchain: %s", err.Error())
 			continue
 		}
 

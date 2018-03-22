@@ -73,7 +73,7 @@ func announceTransaction(node Node, tr Transaction) {
 		client := &http.Client{}
 		resp, err := client.Do(req)
 		if err != nil {
-			glog.Warningf("POST request error: %s", err)
+			glog.Warningf("POST request error: %s", err.Error())
 			// I don't want to panic here, but it might be a good idea to
 			// remove the node from the list (todo)
 		} else {
