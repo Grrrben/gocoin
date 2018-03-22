@@ -20,6 +20,9 @@ const hashDifficulty int8 = 4
 // This should be the hash ending in the proof of work
 const hashEndsWith string = "0000"
 
+// The incentive paid to the miner of a minted block
+const minersIncentive = 1
+
 type Blockchain struct {
 	Chain        []Block
 	Transactions []Transaction
@@ -67,28 +70,26 @@ func (bc *Blockchain) isNonExistingTransaction(newTr Transaction) bool {
 // clearTransactions loops all transactions in this node and filters out all transactions that are
 // persisted in the mined block
 func (bc *Blockchain) clearTransactions(trs []Transaction) {
-	var hashesInBlock = map[string]Transaction{}
 	// get a map of all hashes and their corresponding Transactions
+	var hashesInBlock = map[string]Transaction{}
 	for _, tr := range trs {
 		hashesInBlock[tr.getHash()] = tr
 	}
 
-	transactionsNotInBlock := bc.Transactions[:0]
+	// Set the transactions not found in the announced block to this chain's transaction List
+	var transactionsNotInMinedBlock []Transaction
 	for _, tr := range bc.Transactions {
 		_, exists := hashesInBlock[tr.getHash()]
 		if !exists {
 			glog.Infof("Transaction does not exist, keeping it:\n %v", tr)
-			transactionsNotInBlock = append(transactionsNotInBlock, tr)
+			transactionsNotInMinedBlock = append(transactionsNotInMinedBlock, tr)
 		}
 	}
-	// Set the transactions not found in the announced block to this chain's transaction List
-	bc.Transactions = transactionsNotInBlock
+	bc.Transactions = transactionsNotInMinedBlock
 }
 
 // Hash Creates a SHA-256 hash of a Block
 func hash(bl Block) string {
-	glog.Infof("hashing block %d\n", bl.Index)
-
 	var buf bytes.Buffer
 	err := gob.NewEncoder(&buf).Encode(bl)
 	if err != nil {
@@ -102,36 +103,28 @@ func (bc *Blockchain) lastBlock() Block {
 	return bc.Chain[len(bc.Chain)-1]
 }
 
+// proofOfWork is a simple Proof of Work Algorithm:
+// Find a number p such that hash('lp') contains leading X zeroes, where
+// l is the previous Proof, and p is the new Proof
 func (bc *Blockchain) proofOfWork(lastProof int64) int64 {
-	// Simple Proof of Work Algorithm:
-	// - Find a number p' such that hash(lp') contains leading X zeroes, where
-	// - l is the previous Proof, and p' is the new Proof
 	var proof int64 = 0
-	i := 0
 	for !bc.validProof(lastProof, proof) {
-		proof += 1
-		i++
+		proof++
 	}
-	glog.Infof("Proof found in %d cycles (difficulty %d)\n", i, hashDifficulty)
+	glog.Infof("Proof found in %d cycles (difficulty %d)\n", proof, hashDifficulty)
 	return proof
-
 }
 
 // validProof is called until it finds an acceptable hash and returns true
-func (bc *Blockchain) validProof(proof int64, lastProof int64) bool {
+func (bc *Blockchain) validProof(proof, lastProof int64) bool {
 	guess := fmt.Sprintf("%d%d", lastProof, proof)
 	guessHash := fmt.Sprintf("%x", sha256.Sum256([]byte(guess)))
-
-	if guessHash[:hashDifficulty] == hashEndsWith {
-		return true
-	}
-	return false
+	return guessHash[:hashDifficulty] == hashEndsWith
 }
 
 // newBlock add's a new block to the chain and resets the transactions as new transactions will be added
 // to the next block
 func (bc *Blockchain) newBlock(proof int64) Block {
-
 	var prevHash string
 	if len(bc.Chain) == 0 {
 		// this is the genesis block
@@ -151,7 +144,7 @@ func (bc *Blockchain) newBlock(proof int64) Block {
 
 	bc.Transactions = nil // reset transactions as the block will be added to the chain
 	bc.Chain = append(bc.Chain, block)
-	cls.announceMinedBlocks(block)
+	nodes.announceMinedBlocks(block)
 	return block
 }
 
@@ -252,8 +245,8 @@ func initBlockchain() *Blockchain {
 // it is used at the startup
 func (bc *Blockchain) getCurrentTransactions() bool {
 	defer glog.Flush()
-	if len(cls.List) > 1 {
-		for _, node := range cls.List {
+	if len(nodes.List) > 1 {
+		for _, node := range nodes.List {
 			url := fmt.Sprintf("%s/transactions", node.getAddress())
 
 			if me.getAddress() == node.getAddress() {
@@ -263,7 +256,7 @@ func (bc *Blockchain) getCurrentTransactions() bool {
 			resp, err := http.Get(url)
 			if err != nil {
 				glog.Warningf("Transactions request error: %s", err)
-				continue // next
+				continue
 			}
 
 			var transactions []Transaction
@@ -286,7 +279,6 @@ func (bc *Blockchain) getCurrentTransactions() bool {
 }
 
 // validate. Determines if a given blockchain is valid.
-// Returns bool, true if valid
 func (bc *Blockchain) validate() bool {
 	defer glog.Flush()
 	chainLength := len(bc.Chain)
@@ -296,26 +288,18 @@ func (bc *Blockchain) validate() bool {
 	}
 
 	for i := 1; i < chainLength; i++ {
-		// Check that the hash of the block is correct
-		// if block['previous_hash'] != self.Hash(last_block):
-		// return False
 		previous := bc.Chain[i-1]
 		current := bc.Chain[i]
 
+		// Check that the hash of the block is correct
 		if current.PreviousHash != hash(previous) {
-			glog.Warning("invalid Hash")
-			glog.Warningf("Previous block: %d\n", previous.Index)
-			glog.Warningf("Current block: %d\n", current.Index)
+			glog.Warningf("Invalid Hash in blockchain, block %d cannot be placed before block %d", previous.Index, current.Index)
 			return false
 		}
 
 		// Check that the Proof of Work is correct
-		// if not self.valid_proof(last_block['proof'], block['proof']):
-		// return False
 		if !bc.validProof(previous.Proof, current.Proof) {
-			glog.Warning("invalid proof")
-			glog.Warningf("Previous block: %d\n", previous.Index)
-			glog.Warningf("Current block: %d\n", current.Index)
+			glog.Warningf("Invalid proof of block %d, with previous block %d", current.Index, previous.Index)
 			return false
 		}
 	}
@@ -333,7 +317,7 @@ func (bc *Blockchain) mine() (Block, error) {
 	transaction := Transaction{
 		zerohash,
 		me.Hash,
-		1,
+		minersIncentive,
 		fmt.Sprintf("Mined by %s", me.getAddress()),
 		time.Now().UnixNano(),
 	}
@@ -345,11 +329,10 @@ func (bc *Blockchain) mine() (Block, error) {
 	return block, nil
 }
 
-// resolve is the Consensus Algorithm, it resolves conflicts
-// by replacing our chain with the longest one in the network.
+// resolve is the Consensus Algorithm, it resolves conflicts by replacing our chain with the longest one in the network.
 // Returns bool. True if our chain was replaced, false if not
 func (bc *Blockchain) resolve() bool {
-	glog.Infof("Resolving conflicts (nodes %d):", len(cls.List))
+	glog.Infof("Resolving conflicts (nodes %d):", len(nodes.List))
 	replaced := false
 
 	// first, let's grep some of the lengths of the different node chains.
@@ -387,7 +370,7 @@ func (bc *Blockchain) resolve() bool {
 
 			if valid {
 				glog.Infof("Blockchain replaced. Found length of %d instead of current %d.", len(extChain.Chain), len(bc.Chain))
-				fmt.Printf("Synced with %s\n", node.getAddress())
+				glog.Infof("Synced with %s\n", node.getAddress())
 				replaced = true
 			} else {
 				// reset to old blockchain
@@ -417,7 +400,7 @@ func (bc *Blockchain) chainLengthPerNode() PairList {
 
 	var wg sync.WaitGroup
 
-	for i, cl := range cls.List {
+	for i, cl := range nodes.List {
 		if cl == me {
 			continue
 		}

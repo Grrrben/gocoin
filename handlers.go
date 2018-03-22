@@ -107,7 +107,7 @@ func (a *App) newTransaction(w http.ResponseWriter, r *http.Request) {
 			respondWithError(w, http.StatusUnprocessableEntity, err.Error())
 		} else {
 			// all OK. Add the transaction and distribute it.
-			cls.distributeTransaction(addedTransaction) // distribution
+			nodes.distributeTransaction(addedTransaction) // distribution
 			respondWithJSON(w, http.StatusOK, "Transaction added")
 		}
 	}
@@ -236,9 +236,9 @@ func (a *App) connectNode(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	// register the node
-	added := cls.addNode(&newCl)
+	added := nodes.addNode(&newCl)
 	if added {
-		resp := map[string]interface{}{"Node": newCl, "total": cls.num()}
+		resp := map[string]interface{}{"Node": newCl, "total": nodes.num()}
 		respondWithJSON(w, http.StatusOK, resp)
 	} else {
 		respondWithError(w, http.StatusConflict, "Node could not be added")
@@ -247,7 +247,7 @@ func (a *App) connectNode(w http.ResponseWriter, r *http.Request) {
 
 // getNodes response is the list of Nodes
 func (a *App) getNodes(w http.ResponseWriter, r *http.Request) {
-	resp := map[string]interface{}{"list": cls.List, "length": len(cls.List)}
+	resp := map[string]interface{}{"list": nodes.List, "length": len(nodes.List)}
 	respondWithJSON(w, http.StatusOK, resp)
 }
 

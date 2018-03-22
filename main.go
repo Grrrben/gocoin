@@ -13,7 +13,7 @@ import (
 )
 
 var bc *Blockchain
-var cls *Nodes
+var nodes *Nodes
 
 var nodePort uint16
 var nodeName *string

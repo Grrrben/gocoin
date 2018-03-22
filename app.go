@@ -40,7 +40,7 @@ func (a *App) Initialize() {
 	}
 
 	// add the Node to the stack
-	cls = initNodes() // a pointer to the Nodes struct
+	nodes = initNodes() // a pointer to the Nodes struct
 	cl := Node{
 		Protocol: "http://",
 		Hostname: name,
@@ -51,11 +51,11 @@ func (a *App) Initialize() {
 
 	me = cl
 	// register me as the first node
-	cls.addNode(&cl)
+	nodes.addNode(&cl)
 	// fetch a list of existing Nodes
-	cls.syncNodes()
+	nodes.syncNodes()
 	// register me at all other Nodes
-	cls.greetNodes()
+	nodes.greetNodes()
 
 	bc = initBlockchain()
 	bc.getCurrentTransactions()
