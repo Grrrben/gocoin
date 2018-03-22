@@ -20,10 +20,9 @@ type Node struct {
 	Hash     string `json:"hash"`
 }
 
-// greet makes a call to a node cl to make this node known within the network.
-func greet(cl Node) {
-	// POST to /node
-	url := fmt.Sprintf("%s/node", cl.getAddress())
+// greet makes a call to a node to make this node known within the network.
+func greet(node Node) {
+	url := fmt.Sprintf("%s/node", node.getAddress())
 	payload, err := json.Marshal(me)
 	if err != nil {
 		glog.Warning("Could not marshall node: Me")
@@ -32,7 +31,7 @@ func greet(cl Node) {
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payload))
 	if err != nil {
-		glog.Warningf("Request setup error: %s", err)
+		glog.Warningf("Request setup error: %s", err.Error())
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
@@ -40,9 +39,9 @@ func greet(cl Node) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		glog.Warningf("POST request error: %s", err)
+		glog.Warningf("POST request error: %s", err.Error())
 		// I don't want to panic here, but it might be a good idea to
-		// remove the node from the list
+		// remove the node from the list (todo)
 	} else {
 		resp.Body.Close()
 	}
@@ -51,19 +50,19 @@ func greet(cl Node) {
 // createWallet Creates a wallet and sets the hash of the new wallet on the Node.
 // Is is done only once. As soon as the wallet hash is set this function does nothing.
 // If a nodes mines a block, the incentive is sent to this wallet address
-func (cl *Node) createWallet() {
-	if !hasValidHash(cl) {
+func (node *Node) createWallet() {
+	if !hasValidHash(node) {
 		wallet := createWallet()
-		cl.Hash = wallet.hash
+		node.Hash = wallet.hash
 	}
 }
 
-// to make each Node a Hashable (interface)
-func (cl Node) getHash() string {
-	return cl.Hash
+// getHash; to make each Node a Hashable (interface)
+func (node Node) getHash() string {
+	return node.Hash
 }
 
 // getAddress returns (URI) address of a node.
-func (cl Node) getAddress() string {
-	return fmt.Sprintf("%s%s:%d", cl.Protocol, cl.Hostname, cl.Port)
+func (node Node) getAddress() string {
+	return fmt.Sprintf("%s%s:%d", node.Protocol, node.Hostname, node.Port)
 }

@@ -12,7 +12,7 @@ import (
 func init() {
 	// setup
 	flag.Parse()
-	cls = initNodes()
+	nodes = initNodes()
 	me = Node{
 		Protocol: "http://",
 		Hostname: "127.0.0.1",
@@ -20,7 +20,7 @@ func init() {
 		Name:     "node1",
 	}
 	me.createWallet()
-	cls.addNode(&me)
+	nodes.addNode(&me)
 }
 
 func TestInitBlockchain(t *testing.T) {

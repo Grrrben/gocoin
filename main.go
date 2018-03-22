@@ -13,7 +13,7 @@ import (
 )
 
 var bc *Blockchain
-var cls *Nodes
+var nodes *Nodes
 
 var nodePort uint16
 var nodeName *string
@@ -27,15 +27,15 @@ func main() {
 
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
-		log.Fatalf("Could not set a logdir. Msg %s", err)
+		log.Fatalf("Could not set a logdir. Msg %s", err.Error())
 	}
 
 	glog.SetLogFile(fmt.Sprintf("%s/log/blockchain.log", dir))
-	glog.SetLogLevel(glog.Log_level_warning)
+	glog.SetLogLevel(glog.Log_level_info)
 
 	u, err := strconv.ParseUint(*prt, 10, 16) // always gives an uint64...
 	if err != nil {
-		glog.Errorf("Unable to cast Prt to uint: %s", err)
+		glog.Errorf("Unable to cast Prt to uint: %s", err.Error())
 	}
 	// different Nodes can have different ports,
 	// used to connect multiple Nodes in debug.

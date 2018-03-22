@@ -7,9 +7,9 @@ import (
 )
 
 func TestInitNodes(t *testing.T) {
-	cls = initNodes()
+	nodes = initNodes()
 
-	typeof := fmt.Sprint(reflect.TypeOf(cls))
+	typeof := fmt.Sprint(reflect.TypeOf(nodes))
 
 	if typeof != "*main.Nodes" {
 		t.Errorf("Wrong type, expected *main.Nodes, got %s", typeof)
@@ -23,13 +23,13 @@ func TestAddNode(t *testing.T) {
 		Port:     8000,
 		Name:     "node_x",
 	}
-	cls.addNode(&testNode)
+	nodes.addNode(&testNode)
 
-	if len(cls.List) != 1 {
+	if len(nodes.List) != 1 {
 		t.Error("Added one node, list should have length 1.")
 	}
 
-	cl := cls.List[0]
+	cl := nodes.List[0]
 
 	if cl.Name != "node_x" {
 		t.Error("Wrong node in cls in test TestAddNode")
@@ -41,8 +41,8 @@ func TestAddNode(t *testing.T) {
 }
 
 func TestNum(t *testing.T) {
-	if cls.num() != 1 {
-		t.Errorf("Expected 1 node, got %d.", cls.num())
+	if nodes.num() != 1 {
+		t.Errorf("Expected 1 node, got %d.", nodes.num())
 	}
 
 	secondNode := Node{
@@ -51,9 +51,9 @@ func TestNum(t *testing.T) {
 		Port:     8001,
 		Name:     "node2",
 	}
-	cls.addNode(&secondNode)
+	nodes.addNode(&secondNode)
 
-	if cls.num() != 2 {
-		t.Errorf("Expected 2 nodes, got %d.", cls.num())
+	if nodes.num() != 2 {
+		t.Errorf("Expected 2 nodes, got %d.", nodes.num())
 	}
 }

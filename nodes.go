@@ -12,29 +12,29 @@ type Nodes struct {
 }
 
 func initNodes() *Nodes {
-	cls := &Nodes{}
-	return cls
+	nodes := &Nodes{}
+	return nodes
 }
 
 // addNode Add a new Node to the list.
 // A Node can only be added a single time, the list is unique.
 // return bool true on success.
-func (cls *Nodes) addNode(cl *Node) bool {
-	cl.createWallet()
-	for _, c := range cls.List {
-		if c.getAddress() == cl.getAddress() {
-			glog.Warningf("Node already known: %s", c.getAddress())
+func (nodes *Nodes) addNode(newNode *Node) bool {
+	newNode.createWallet()
+	for _, n := range nodes.List {
+		if n.getAddress() == newNode.getAddress() {
+			glog.Warningf("Node already known: %s", n.getAddress())
 			return false
 		}
 	}
-	cls.List = append(cls.List, *cl)
-	glog.Infof("Node added (%s). Nodes: %d\n", cl.getAddress(), cls.num())
+	nodes.List = append(nodes.List, *newNode)
+	glog.Infof("Node added (%s). Nodes: %d", newNode.getAddress(), nodes.num())
 	return true
 }
 
 // syncNodes contacts other Nodes to fetch a full list of Nodes
 // todo; how do I know which nodes are currently in the network
-func (cls *Nodes) syncNodes() bool {
+func (nodes *Nodes) syncNodes() bool {
 	// if I am the only node, ignore this
 	if me.Port == 8000 {
 		return true
@@ -42,7 +42,7 @@ func (cls *Nodes) syncNodes() bool {
 	// for now, just use the main parent node as an oracle.
 	url := "http://localhost:8000/node"
 
-	var externalCls Nodes
+	var externalNodes Nodes
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -50,18 +50,18 @@ func (cls *Nodes) syncNodes() bool {
 		return false
 	}
 
-	decodingErr := json.NewDecoder(resp.Body).Decode(&externalCls)
+	decodingErr := json.NewDecoder(resp.Body).Decode(&externalNodes)
 	if decodingErr != nil {
 		glog.Warningf("Could not decode JSON of list of Nodes\n")
 		return false
 	}
 
-	glog.Infof("externalCls:\n%v\n", externalCls)
+	glog.Infof("external nodes:\n%v", externalNodes)
 
 	// just try to add all nodes
 	i := 0
-	for _, c := range externalCls.List {
-		success := cls.addNode(&c)
+	for _, n := range externalNodes.List {
+		success := nodes.addNode(&n)
 		if success == true {
 			i++
 		}
@@ -71,41 +71,41 @@ func (cls *Nodes) syncNodes() bool {
 }
 
 // greetNodes contacts other Nodes to add this node to their list of known Nodes
-func (cls *Nodes) greetNodes() bool {
-	for _, cl := range cls.List {
-		if cl == me {
+func (nodes *Nodes) greetNodes() bool {
+	for _, node := range nodes.List {
+		if node == me {
 			// no need to register myself
 			continue
 		}
-		go greet(cl)
+		go greet(node)
 	}
 	return true
 }
 
 // announceMinedBlocks tells all nodes in the network about the newly mined block.
 // it gives the new block to the nodes who can add it to their chain.
-func (cls *Nodes) announceMinedBlocks(bl Block) {
-	for _, cl := range cls.List {
-		if cl == me {
+func (nodes *Nodes) announceMinedBlocks(bl Block) {
+	for _, node := range nodes.List {
+		if node == me {
 			continue // no need to brag
 		}
-		go announceMinedBlock(cl, bl)
+		go announceMinedBlock(node, bl)
 	}
 }
 
 // distributeTransaction tells all nodes in the network about the new Transaction.
-func (cls *Nodes) distributeTransaction(tr Transaction) {
-	glog.Infof("Announcing transaction to %d nodes", len(cls.List))
-	for _, cl := range cls.List {
-		if cl == me {
+func (nodes *Nodes) distributeTransaction(tr Transaction) {
+	glog.Infof("Announcing transaction to %d nodes", len(nodes.List))
+	for _, node := range nodes.List {
+		if node == me {
 			continue // no need to brag
 		}
 		glog.Info("Announcing transaction")
-		go announceTransaction(cl, tr)
+		go announceTransaction(node, tr)
 	}
 }
 
 // num returns an int which represents the number of connected nodes.
-func (cls *Nodes) num() int {
-	return len(cls.List)
+func (nodes *Nodes) num() int {
+	return len(nodes.List)
 }
