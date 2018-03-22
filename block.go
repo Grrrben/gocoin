@@ -31,19 +31,19 @@ func announceMinedBlock(cl Node, bl Block) {
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payload))
 	if err != nil {
-		glog.Warningf("Request setup error: %s", err)
-		panic(err)
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		glog.Warningf("POST request error: %s", err)
-		// I don't want to panic here, but it might be a good idea to
-		// remove the node from the list
+		glog.Errorf("Request setup error: %s", err)
 	} else {
-		resp.Body.Close()
+		req.Header.Set("Content-Type", "application/json")
+
+		client := &http.Client{}
+		resp, err := client.Do(req)
+		if err != nil {
+			glog.Warningf("POST request error: %s", err)
+			// I don't want to panic here, but it might be a good idea to
+			// remove the node from the list
+		} else {
+			resp.Body.Close()
+		}
 	}
 }
 
