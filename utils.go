@@ -61,9 +61,5 @@ func validHash(hash string) bool {
 	if err != nil {
 		log.Fatal("Could not compile regex")
 	}
-	if regex.MatchString(hash) {
-		return true
-	} else {
-		return false
-	}
+	return regex.MatchString(hash)
 }
