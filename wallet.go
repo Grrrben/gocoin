@@ -21,7 +21,7 @@ func createWallet() wallet {
 	var buf bytes.Buffer
 	err := binary.Write(&buf, binary.BigEndian, time.Now().Unix())
 	if err != nil {
-		glog.Warningf("Could not createWallet. Msg: %s", err.Error())
+		glog.Warningf("Could not createWallet. Msg: %s", err)
 	}
 
 	w := wallet{

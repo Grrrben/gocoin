@@ -31,7 +31,7 @@ func greet(node Node) {
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payload))
 	if err != nil {
-		glog.Warningf("Request setup error: %s", err.Error())
+		glog.Warningf("Request setup error: %s", err)
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
@@ -39,7 +39,7 @@ func greet(node Node) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		glog.Warningf("POST request error: %s", err.Error())
+		glog.Warningf("POST request error: %s", err)
 		// I don't want to panic here, but it might be a good idea to
 		// remove the node from the list (todo)
 	} else {

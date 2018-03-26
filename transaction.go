@@ -62,18 +62,18 @@ func announceTransaction(node Node, tr Transaction) {
 	glog.Infof("transactionAndSender to be distributed:\n %v", transactionAndSender)
 	payload, err := json.Marshal(transactionAndSender)
 	if err != nil {
-		glog.Errorf("Could not marshall transaction or node. Msg: %s", err.Error())
+		glog.Errorf("Could not marshall transaction or node. Msg: %s", err)
 	}
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payload))
 	if err != nil {
-		glog.Errorf("Request setup error: %s", err.Error())
+		glog.Errorf("Request setup error: %s", err)
 	} else {
 		req.Header.Set("Content-Type", "application/json")
 		client := &http.Client{}
 		resp, err := client.Do(req)
 		if err != nil {
-			glog.Warningf("POST request error: %s", err.Error())
+			glog.Warningf("POST request error: %s", err)
 			// I don't want to panic here, but it might be a good idea to
 			// remove the node from the list (todo)
 		} else {
