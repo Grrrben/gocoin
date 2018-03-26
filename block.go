@@ -25,20 +25,20 @@ func announceMinedBlock(cl Node, bl Block) {
 	blockAndSender := map[string]interface{}{"block": bl, "sender": me.getAddress()}
 	payload, err := json.Marshal(blockAndSender)
 	if err != nil {
-		glog.Errorf("Could not marshall block or node. Msg: %s", err.Error())
+		glog.Errorf("Could not marshall block or node. Msg: %s", err)
 		panic(err)
 	}
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payload))
 	if err != nil {
-		glog.Errorf("Request setup error: %s", err.Error())
+		glog.Errorf("Request setup error: %s", err)
 	} else {
 		req.Header.Set("Content-Type", "application/json")
 
 		client := &http.Client{}
 		resp, err := client.Do(req)
 		if err != nil {
-			glog.Warningf("POST request error: %s", err.Error())
+			glog.Warningf("POST request error: %s", err)
 			// I don't want to panic here, but it might be a good idea to
 			// remove the node from the list
 		} else {

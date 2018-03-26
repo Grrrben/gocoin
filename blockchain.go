@@ -93,7 +93,7 @@ func hash(bl Block) string {
 	var buf bytes.Buffer
 	err := gob.NewEncoder(&buf).Encode(bl)
 	if err != nil {
-		glog.Errorf("Could not compute hash: %s", err.Error())
+		glog.Errorf("Could not compute hash: %s", err)
 	}
 	return fmt.Sprintf("%x", sha256.Sum256(buf.Bytes())) // %x; base 16, with lower-case letters for a-f
 }
@@ -187,19 +187,19 @@ func (bc *Blockchain) analyseInvalidBlock(bl Block, sender string) bool {
 
 			resp, err := http.Get(url)
 			if err != nil {
-				glog.Warningf("Request error: %s", err.Error())
+				glog.Warningf("Request error: %s", err)
 				return false
 			}
 
 			decodingErr := json.NewDecoder(resp.Body).Decode(&nextBlock)
 			if decodingErr != nil {
-				glog.Warningf("Decoding error: %s", err.Error())
+				glog.Warningf("Decoding error: %s", err)
 				return false
 			}
 
 			_, err = bc.addBlock(nextBlock)
 			if err != nil {
-				glog.Warningf("Could not add block %d from %s: %s", lastBlock.Index+i, sender, err.Error())
+				glog.Warningf("Could not add block %d from %s: %s", lastBlock.Index+i, sender, err)
 				return false
 			}
 			defer resp.Body.Close()
@@ -255,7 +255,7 @@ func (bc *Blockchain) getCurrentTransactions() bool {
 			}
 			resp, err := http.Get(url)
 			if err != nil {
-				glog.Warningf("Transactions request error: %s", err.Error())
+				glog.Warningf("Transactions request error: %s", err)
 				continue
 			}
 
@@ -264,7 +264,7 @@ func (bc *Blockchain) getCurrentTransactions() bool {
 			decodingErr := json.NewDecoder(resp.Body).Decode(&transactions)
 
 			if decodingErr != nil {
-				glog.Warningf("Could not decode JSON of external transactions: %s", err.Error())
+				glog.Warningf("Could not decode JSON of external transactions: %s", err)
 				continue
 			}
 			resp.Body.Close()
@@ -348,7 +348,7 @@ func (bc *Blockchain) resolve() bool {
 		url := fmt.Sprintf("%s/chain", node.getAddress())
 		resp, err := http.Get(url)
 		if err != nil {
-			glog.Warningf("Chain request error: %s", err.Error())
+			glog.Warningf("Chain request error: %s", err)
 			// I don't want to panic here, but it could be a good idea to
 			// remove the node from the list
 			continue
@@ -358,7 +358,7 @@ func (bc *Blockchain) resolve() bool {
 		decodingErr := json.NewDecoder(resp.Body).Decode(&extChain)
 
 		if decodingErr != nil {
-			glog.Warningf("Could not decode JSON of external blockchain: %s", err.Error())
+			glog.Warningf("Could not decode JSON of external blockchain: %s", err)
 			continue
 		}
 
@@ -422,7 +422,7 @@ func (bc *Blockchain) chainLengthPerNode() PairList {
 	}
 
 	for err := range errChannel {
-		glog.Warningf("Error in fetching list of node statusses", err.Error())
+		glog.Warningf("Error in fetching list of node statusses", err)
 	}
 
 	glog.Infof("Length of nodes:\n%v\n", len(nodeLength))

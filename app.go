@@ -35,7 +35,7 @@ func (a *App) Initialize() {
 
 	name, err := os.Hostname()
 	if err != nil {
-		fmt.Printf("Oops: %v\n", err.Error())
+		fmt.Printf("Oops: %v\n", err)
 		return
 	}
 

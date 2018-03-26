@@ -74,7 +74,7 @@ func (a *App) distributedTransaction(w http.ResponseWriter, r *http.Request) {
 			glog.Infof("transaction: %v", payload.Transaction)
 			_, err = bc.newTransaction(payload.Transaction)
 			if err != nil {
-				glog.Warningf("%s on Node: %s", err.Error(), me.getAddress())
+				glog.Warningf("%s on Node: %s", err, me.getAddress())
 				respondWithError(w, http.StatusUnprocessableEntity, err.Error())
 			} else {
 				glog.Infof("Transaction added on Node: %s", me.getAddress())
@@ -97,7 +97,7 @@ func (a *App) newTransaction(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&tr)
 
 	if err != nil {
-		glog.Warningf("Invalid Transaction (%s)", err.Error())
+		glog.Warningf("Invalid Transaction (%s)", err)
 		respondWithError(w, http.StatusUnprocessableEntity, "Invalid Transaction (Unable to decode)")
 	} else {
 		// for a new transaction, time should be added by the system
@@ -198,7 +198,7 @@ func (a *App) blockByIndex(w http.ResponseWriter, r *http.Request) {
 
 	index, err := strconv.ParseInt(rawIndex, 10, 16) // always gives an int64...
 	if err != nil {
-		glog.Errorf("Unable to cast block Index %s to int: %s", rawIndex, err.Error())
+		glog.Errorf("Unable to cast block Index %s to int: %s", rawIndex, err)
 	}
 
 	found := false
