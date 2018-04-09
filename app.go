@@ -35,12 +35,12 @@ func (a *App) Initialize() {
 
 	name, err := os.Hostname()
 	if err != nil {
-		fmt.Printf("Oops: %v\n", err)
+		glog.Errorf("Could not get os.Hostname; %s", err)
 		return
 	}
 
 	// add the Node to the stack
-	nodes = initNodes() // a pointer to the Nodes struct
+	nodes = initNodes()
 	cl := Node{
 		Protocol: "http://",
 		Hostname: name,

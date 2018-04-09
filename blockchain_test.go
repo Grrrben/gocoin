@@ -4,6 +4,13 @@ import (
 	"flag"
 	"testing"
 	"time"
+
+	"fmt"
+	"log"
+	"os"
+	"path/filepath"
+
+	"github.com/grrrben/glog"
 )
 
 // Testing a couple of blockchain related functions on a base chain
@@ -12,6 +19,15 @@ import (
 func init() {
 	// setup
 	flag.Parse()
+
+	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+		log.Fatalf("Could not set a logdir. Msg %s", err)
+	}
+
+	glog.SetLogFile(fmt.Sprintf("%s/log/blockchain.log", dir))
+	glog.SetLogLevel(glog.Log_level_error)
+
 	nodes = initNodes()
 	me = Node{
 		Protocol: "http://",
