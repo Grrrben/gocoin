@@ -8,7 +8,6 @@ import (
 
 	"os"
 
-	"github.com/BurntSushi/toml"
 	"github.com/gorilla/mux"
 	"github.com/grrrben/glog"
 )
@@ -22,8 +21,6 @@ type Config struct {
 	Server Server
 }
 
-var config Config
-
 type App struct {
 	Router *mux.Router
 	DB     *sql.DB
@@ -31,7 +28,6 @@ type App struct {
 
 func (a *App) Initialize() {
 	fmt.Println("Initialising the blockchain")
-	config = GetConfig()
 
 	name, err := os.Hostname()
 	if err != nil {
@@ -97,18 +93,4 @@ func (a *App) initializeRoutes() {
 	// Nodes
 	a.Router.HandleFunc("/node", a.connectNode).Methods("POST")
 	a.Router.HandleFunc("/node", a.getNodes).Methods("GET")
-}
-
-// readConfig loads the config file.
-// It tests for the existence of the file and whether or not it can be decoded by a TOML decoder
-func readConfig() {
-	var configfile = "config.toml"
-	_, err := os.Stat(configfile)
-	if err != nil {
-		log.Fatal("Config file is missing: ", configfile)
-	}
-
-	if _, err := toml.DecodeFile(configfile, &config); err != nil {
-		log.Fatal(err)
-	}
 }

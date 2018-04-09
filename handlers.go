@@ -281,15 +281,6 @@ func (a *App) mine(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// GetConfig test of the config needs to be loaded and returns the Config file.
-func GetConfig() Config {
-	var cf *Config
-	if cf == nil {
-		readConfig()
-	}
-	return config
-}
-
 func respondWithError(w http.ResponseWriter, code int, message string) {
 	respondWithJSON(w, code, map[string]string{"error": message})
 }
