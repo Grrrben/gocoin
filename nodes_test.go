@@ -29,13 +29,13 @@ func TestAddNode(t *testing.T) {
 		t.Error("Added one node, list should have length 1.")
 	}
 
-	cl := nodes.List[0]
+	node := nodes.List[0]
 
-	if cl.Name != "node_x" {
-		t.Error("Wrong node in cls in test TestAddNode")
+	if node.Name != "node_x" {
+		t.Error("Wrong node in nodes in test TestAddNode")
 	}
 
-	if len(cl.Hash) != 64 {
+	if len(node.Hash) != 64 {
 		t.Error("Node has no valid hash in test TestAddNode")
 	}
 }

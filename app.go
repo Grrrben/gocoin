@@ -41,17 +41,17 @@ func (a *App) Initialize() {
 
 	// add the Node to the stack
 	nodes = initNodes() // a pointer to the Nodes struct
-	cl := Node{
+	node := Node{
 		Protocol: "http://",
 		Hostname: name,
 		Port:     nodePort,
 		Name:     *nodeName,
 	}
-	cl.createWallet()
+	node.createWallet()
 
-	me = cl
+	me = node
 	// register me as the first node
-	nodes.addNode(&cl)
+	nodes.addNode(&node)
 	// fetch a list of existing Nodes
 	nodes.syncNodes()
 	// register me at all other Nodes

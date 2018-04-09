@@ -19,8 +19,8 @@ type Block struct {
 
 // announceMinedBlock shares the block with other nodes. It is done in a goroutine.
 // Other nodes should check the validity of the new block on their chain and add it.
-func announceMinedBlock(cl Node, bl Block) {
-	url := fmt.Sprintf("%s/block/distributed", cl.getAddress())
+func announceMinedBlock(node Node, bl Block) {
+	url := fmt.Sprintf("%s/block/distributed", node.getAddress())
 
 	blockAndSender := map[string]interface{}{"block": bl, "sender": me.getAddress()}
 	payload, err := json.Marshal(blockAndSender)

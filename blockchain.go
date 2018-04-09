@@ -393,19 +393,19 @@ func (bc *Blockchain) resolve() bool {
 func (bc *Blockchain) chainLengthPerNode() PairList {
 	// a map of Nodes with their chain length, the interface{} is used as a key so it is compatible with the sortMapDescending function
 	nodeLength := make(map[interface{}]int)
-	// a channel with the cl vs length struct
+	// a channel with the node vs length struct
 	nodeChannel := make(chan NodeLength, 10)
 	// in case something goes wrong, show a couple of errors
 	errChannel := make(chan error, 4)
 
 	var wg sync.WaitGroup
 
-	for i, cl := range nodes.List {
-		if cl == me {
+	for i, n := range nodes.List {
+		if n == me {
 			continue
 		}
 		wg.Add(1)
-		go chainLengthOfNode(cl, &wg, nodeChannel, errChannel)
+		go chainLengthOfNode(n, &wg, nodeChannel, errChannel)
 		if i > 10 {
 			break // max 10, but sooner if less nodes are connected
 		}
@@ -432,11 +432,11 @@ func (bc *Blockchain) chainLengthPerNode() PairList {
 }
 
 // chainLengthOfNode Goroutine. Helper function that collects information from nodes and puts it in the channel
-func chainLengthOfNode(cl Node, wg *sync.WaitGroup, channel chan NodeLength, errorChannel chan error) {
+func chainLengthOfNode(node Node, wg *sync.WaitGroup, channel chan NodeLength, errorChannel chan error) {
 	var report StatusReport
 	defer wg.Done()
 
-	url := fmt.Sprintf("%s/status", cl.getAddress())
+	url := fmt.Sprintf("%s/status", node.getAddress())
 	resp, err := http.Get(url)
 	if err != nil {
 		select {
@@ -460,7 +460,6 @@ func chainLengthOfNode(cl Node, wg *sync.WaitGroup, channel chan NodeLength, err
 			defer resp.Body.Close()
 		}
 
-		clen := NodeLength{cl, report.Length}
-		channel <- clen
+		channel <- NodeLength{node, report.Length}
 	}
 }
