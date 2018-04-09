@@ -129,9 +129,8 @@ func (a *App) distributedBlock(w http.ResponseWriter, r *http.Request) {
 	var payload Payload
 	err := decoder.Decode(&payload)
 	if err != nil {
-		glog.Warning("Could not decode postdata of new block")
+		glog.Errorf("Could not decode postdata of new block; %s", err.Error())
 		respondWithError(w, http.StatusBadRequest, "invalid json")
-		panic(err)
 	}
 	block, err := bc.addBlock(payload.NewBlock)
 
@@ -212,12 +211,12 @@ func (a *App) blockByIndex(w http.ResponseWriter, r *http.Request) {
 		break
 	}
 
-	if found == false {
+	if !found {
 		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Could not find block by index %d", index))
 	}
 }
 
-// chainStatus
+// chainStatus tells about the lenght and last hash of the chain.
 func (a *App) chainStatus(w http.ResponseWriter, r *http.Request) {
 	hash := bc.Chain[len(bc.Chain)-1].PreviousHash
 	resp := map[string]interface{}{"length": len(bc.Chain), "hash": hash}
@@ -231,9 +230,8 @@ func (a *App) connectNode(w http.ResponseWriter, r *http.Request) {
 	var newCl Node
 	err := decoder.Decode(&newCl)
 	if err != nil {
-		glog.Warning("Could not decode postdata of new node")
 		respondWithError(w, http.StatusBadRequest, "invalid json")
-		panic(err)
+		glog.Panicf("Could not decode postdata of new node; %s", err.Error())
 	}
 	// register the node
 	added := nodes.addNode(&newCl)

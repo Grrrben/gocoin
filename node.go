@@ -25,14 +25,12 @@ func greet(node Node) {
 	url := fmt.Sprintf("%s/node", node.getAddress())
 	payload, err := json.Marshal(me)
 	if err != nil {
-		glog.Warning("Could not marshall node: Me")
-		panic(err)
+		glog.Panicf("Could not marshall node: Me; %s", err.Error())
 	}
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payload))
 	if err != nil {
-		glog.Warningf("Request setup error: %s", err)
-		panic(err)
+		glog.Panicf("Request setup error: %s", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 

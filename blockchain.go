@@ -384,7 +384,6 @@ func (bc *Blockchain) resolve() bool {
 			// we have a new, valid, chain.
 			break
 		}
-
 	}
 	return replaced
 }

@@ -25,8 +25,7 @@ func announceMinedBlock(cl Node, bl Block) {
 	blockAndSender := map[string]interface{}{"block": bl, "sender": me.getAddress()}
 	payload, err := json.Marshal(blockAndSender)
 	if err != nil {
-		glog.Errorf("Could not marshall block or node. Msg: %s", err)
-		panic(err)
+		glog.Panicf("Could not marshall block or node. Msg: %s", err)
 	}
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payload))
