@@ -30,12 +30,9 @@ func (a *App) wallet(w http.ResponseWriter, r *http.Request) {
 // transactions shows all transactions made by a wallet with {hash}
 // {hash} is given by POST data from the call
 func (a *App) transactions(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	hash := vars["hash"]
-
-	transactions := []Transaction{}
-
+	hash := mux.Vars(r)["hash"]
 	// check all blocks, see if the hash is the sender or receiver.
+	var transactions []Transaction
 	for _, block := range bc.Chain {
 		for _, transaction := range block.Transactions {
 			if transaction.Sender == hash || transaction.Recipient == hash {
@@ -46,7 +43,7 @@ func (a *App) transactions(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, transactions)
 }
 
-// currentTransactions shows all transactions that are not in a block yet
+// currentTransactions shows all transactions of the node that are not in a block yet
 func (a *App) currentTransactions(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, bc.Transactions)
 }
@@ -296,7 +293,6 @@ func respondWithError(w http.ResponseWriter, code int, message string) {
 
 func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	response, _ := json.Marshal(payload)
-
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 	w.Write(response)
