@@ -49,6 +49,7 @@ func (nodes *Nodes) syncNodes() bool {
 		glog.Warningf("Could not get list of Nodes on url: %s", url)
 		return false
 	}
+	defer resp.Body.Close()
 
 	decodingErr := json.NewDecoder(resp.Body).Decode(&externalNodes)
 	if decodingErr != nil {
