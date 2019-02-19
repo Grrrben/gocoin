@@ -251,7 +251,6 @@ The HTTP code is a 200 on success or a 409 if a conflict with current listed nod
 ## TODO
 
 + Public/Private key pairs in transactions and/or wallets for proof of ownership.
-+ gRCP instead of the http API
 + write _more_ tests
 + rules for mining (e.g. minimal number of transactions, a flexible difficulty)
 
